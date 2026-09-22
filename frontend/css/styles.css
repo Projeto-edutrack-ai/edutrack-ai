@@ -1,0 +1,511 @@
+/* ==========================================================================
+   EduTrack AI — Design System & Animations
+   Inspired by Linear, Stripe & Apple UI Guidelines
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Light Theme Palette */
+  --bg-primary: #f8fafc;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-surface-solid: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --border-subtle: rgba(226, 232, 240, 0.8);
+  --border-hover: rgba(59, 130, 246, 0.4);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --brand-primary: #2563eb;
+  --brand-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --brand-glow: rgba(37, 99, 235, 0.2);
+}
+
+.dark {
+  /* Dark Theme Palette (Deep Obsidian & Indigo) */
+  --bg-primary: #090d16;
+  --bg-surface: rgba(15, 23, 42, 0.75);
+  --bg-surface-solid: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --border-subtle: rgba(30, 41, 59, 0.8);
+  --border-hover: rgba(96, 165, 250, 0.4);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --brand-primary: #3b82f6;
+  --brand-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  --brand-glow: rgba(59, 130, 246, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* ================= Glassmorphism & Surface Cards ================= */
+.pro-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+
+.pro-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+}
+
+.pro-card-interactive {
+  cursor: pointer;
+}
+
+.pro-card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* ================= Sidebar & Navigation Items (Linear Style) ================= */
+.nav-link-pro {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+}
+
+.nav-link-pro .nav-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--text-muted);
+  transition: color 0.18s ease, transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.nav-link-pro:hover {
+  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.035);
+}
+
+.dark .nav-link-pro:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link-pro:hover .nav-icon {
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.nav-link-pro.active {
+  color: #2563eb;
+  background-color: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.18);
+  font-weight: 700;
+}
+
+.dark .nav-link-pro.active {
+  color: #60a5fa;
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.nav-link-pro.active .nav-icon {
+  color: #2563eb;
+}
+
+.dark .nav-link-pro.active .nav-icon {
+  color: #60a5fa;
+}
+
+.nav-link-pro.active::before {
+  content: '';
+  position: absolute;
+  left: -0.875rem;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--brand-gradient);
+}
+
+/* ================= 3D Scroll World Container ================= */
+#scroll-world-container {
+  width: 100%;
+  height: 400px;
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, rgba(37, 99, 235, 0.18) 0%, rgba(9, 13, 22, 0.97) 75%);
+  /* Cursor grab indica arrastar para qualquer direção */
+  cursor: grab;
+  touch-action: none;
+}
+
+#scroll-world-container:active {
+  cursor: grabbing;
+}
+
+/* Canvas do Three.js preenche todo o container — pointer-events auto para OrbitControls */
+#scroll-world-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  pointer-events: auto;
+}
+
+/* Overlays HTML flutuantes sobre o canvas NÃO interceptam eventos do mouse */
+#scroll-world-container > div {
+  pointer-events: none;
+}
+
+/* Mas botões dentro dos overlays SIM podem ser clicados */
+#scroll-world-container > div button,
+#scroll-world-container > div a {
+  pointer-events: auto;
+}
+
+/* ================= Micro-interactions & Buttons ================= */
+.btn-press {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+.btn-gradient {
+  background: var(--brand-gradient);
+  color: #ffffff;
+  box-shadow: 0 4px 14px 0 var(--brand-glow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient:hover {
+  box-shadow: 0 6px 20px 0 var(--brand-glow);
+  transform: translateY(-1px);
+}
+
+.btn-gradient:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ================= Active Study Timer Ring ================= */
+@keyframes timerPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0), 0 0 30px rgba(59, 130, 246, 0.4);
+  }
+}
+
+.timer-running-pulse {
+  animation: timerPulseGlow 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* ================= Parallax Background Ambient ================= */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  will-change: transform;
+}
+
+.dark .ambient-orb {
+  opacity: 0.25;
+}
+
+.orb-primary {
+  width: 500px;
+  height: 500px;
+  background: #3b82f6;
+  top: -120px;
+  right: -80px;
+}
+
+.orb-secondary {
+  width: 450px;
+  height: 450px;
+  background: #6366f1;
+  bottom: 5%;
+  left: -100px;
+}
+
+.orb-accent {
+  width: 380px;
+  height: 380px;
+  background: #10b981;
+  top: 35%;
+  right: 10%;
+}
+
+/* ================= Toast Notification System ================= */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-message {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ================= Custom Scrollbars ================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================= Progress Fill Transitions ================= */
+.smooth-progress {
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ================= Tab View Animations ================= */
+.tab-view-section {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.tab-view-section:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================= Interactive Animations & Micro-interactions ================= */
+.nav-link-pro:hover {
+  transform: scale(1.01);
+}
+
+.avatar-preset-btn.selected {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  animation: avatarBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes avatarBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes modalOpen {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-animate-in {
+  animation: modalOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes skeletonPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.skeleton-pulse, .loading-pulse {
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+}
+
+/* ================= Accessibility & Touch Improvements ================= */
+button, a, .touch-target, .avatar-preset-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ================= Responsive Breakpoints ================= */
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  #scroll-world-container {
+    height: 420px;
+  }
+  
+  .pro-card:hover, .pro-card-interactive:hover {
+    transform: rotateX(2deg) translateY(-2px);
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #scroll-world-container {
+    height: 300px;
+  }
+  
+  aside, .sidebar, #sidebar {
+    width: 220px !important;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .pro-card {
+    padding: 1rem !important;
+    border-radius: 1rem !important;
+  }
+  
+  #scroll-world-container {
+    height: 240px !important;
+  }
+  
+  /* KPI cards */
+  .grid-cols-4, .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Modais no Mobile: preenchimento responsivo e scroll limpo */
+  #modal-profile-overlay .pro-card,
+  #modal-subject-overlay .pro-card,
+  #modal-task-overlay .pro-card,
+  #modal-forgot-password-overlay .pro-card,
+  #auth-modal-overlay .pro-card {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 1.25rem !important;
+    margin: 0.5rem !important;
+    width: 100% !important;
+  }
+  
+  /* Header Mobile */
+  .sticky-app-header {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .sticky-app-header #global-search-input {
+    font-size: 0.75rem !important;
+  }
+  
+  /* Typography */
+  h2 { font-size: 1.25rem !important; line-height: 1.3 !important; }
+  h3 { font-size: 1.1rem !important; line-height: 1.3 !important; }
+  
+  /* Toast Notifications */
+  #toast-container {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    padding: 0 !important;
+  }
+  
+  .toast-message {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    padding: 10px 14px !important;
+  }
+  
+  /* Bottom mobile nav com Safe Area e Touch otimizado */
+  nav.mobile-bottom-nav {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    height: calc(3.8rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Inputs e botões responsivos com toque confortável */
+  input, select, textarea {
+    font-size: 16px !important; /* Evita zoom automático no iOS Safari */
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
