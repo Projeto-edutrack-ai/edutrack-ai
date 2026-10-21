@@ -155,69 +155,17 @@ const Auth = {
       });
     }
 
-    // Recuperação de senha via Modal Interativo
+    // Recuperação de senha
     const forgotBtn = document.getElementById('btn-forgot-password');
-    const forgotModal = document.getElementById('modal-forgot-password-overlay');
-    const closeForgotBtn = document.getElementById('btn-close-forgot-modal');
-    const cancelForgotBtn = document.getElementById('btn-cancel-forgot-modal');
-    const formForgot = document.getElementById('form-forgot-password');
-    const forgotAlert = document.getElementById('forgot-password-alert');
-    const forgotAlertText = document.getElementById('forgot-password-alert-text');
-    const forgotEmailInput = document.getElementById('forgot-email-input');
-
-    const openForgotModal = () => {
-      if (forgotAlert) forgotAlert.classList.add('hidden');
-      const currentLoginEmail = document.getElementById('login-email')?.value;
-      if (forgotEmailInput && currentLoginEmail) {
-        forgotEmailInput.value = currentLoginEmail;
-      }
-      if (forgotModal) forgotModal.classList.remove('hidden');
-    };
-
-    const closeForgotModal = () => {
-      if (forgotModal) forgotModal.classList.add('hidden');
-    };
-
-    if (forgotBtn) forgotBtn.addEventListener('click', openForgotModal);
-    if (closeForgotBtn) closeForgotBtn.addEventListener('click', closeForgotModal);
-    if (cancelForgotBtn) cancelForgotBtn.addEventListener('click', closeForgotModal);
-
-    if (forgotModal) {
-      forgotModal.addEventListener('click', (e) => {
-        if (e.target === forgotModal) closeForgotModal();
-      });
-    }
-
-    if (formForgot) {
-      formForgot.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = forgotEmailInput?.value?.trim();
-        const submitBtn = document.getElementById('btn-submit-forgot');
-        if (!email) return;
-
-        try {
-          if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>⏳</span> <span>Enviando...</span>';
-          }
-          const resp = await API.forgotPassword(email);
-          if (forgotAlert && forgotAlertText) {
-            forgotAlertText.textContent = resp.message || 'Instruções enviadas com sucesso para seu email!';
-            forgotAlert.classList.remove('hidden');
-          }
-          Toast.show(resp.message || 'Instruções enviadas com sucesso!', 'success');
-          setTimeout(() => {
-            closeForgotModal();
-          }, 2500);
-        } catch (err) {
-          Toast.show('Erro: ' + err.message, 'error');
-        } finally {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              <span>Enviar Instruções</span>
-            `;
+    if (forgotBtn) {
+      forgotBtn.addEventListener('click', async () => {
+        const email = prompt('Digite seu email cadastrado para recuperação:');
+        if (email) {
+          try {
+            const resp = await API.forgotPassword(email);
+            Toast.show(resp.message || 'Instruções enviadas para seu email!', 'success');
+          } catch (e) {
+            Toast.show('Erro: ' + e.message, 'error');
           }
         }
       });
@@ -324,8 +272,8 @@ const Auth = {
     }
   },
 
-  openProfileModal() {
-    const user = API.getCurrentUser();
+  async openProfileModal() {
+    let user = API.getCurrentUser();
     if (!user) return;
 
     this.currentAvatarData = user.avatar_url || null;
@@ -353,6 +301,18 @@ const Auth = {
       if (typeof AppAnimations !== 'undefined') {
         AppAnimations.animateModalOpen(overlay.querySelector('.pro-card'));
       }
+    }
+
+    // Atualiza com dados acadêmicos recentes do Xano (/alunos)
+    try {
+      const fresh = await API.getProfile();
+      if (fresh) {
+        if (fresh.name) document.getElementById('profile-modal-name').value = fresh.name;
+        if (fresh.course) document.getElementById('profile-modal-course').value = fresh.course;
+        if (fresh.college_year) document.getElementById('profile-modal-year').value = fresh.college_year;
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar dados acadêmicos do Xano:', err);
     }
   },
 

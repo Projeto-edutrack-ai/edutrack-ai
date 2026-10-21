@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token
@@ -7,6 +8,26 @@ from app.schemas.user import UserCreate, UserUpdate, UserLogin, UserResponse, To
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Autenticação & Perfil"])
+
+
+def _authenticate_user(email: str, password: str, db: Session) -> User:
+    user = db.query(User).filter(User.email == email.lower().strip()).first()
+    if not user or not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou senha incorretos."
+        )
+    return user
+
+
+def _token_for_user(user: User) -> Token:
+    access_token = create_access_token(subject=user.id)
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
@@ -32,29 +53,21 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    access_token = create_access_token(subject=new_user.id)
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse.model_validate(new_user)
-    )
+    return _token_for_user(new_user)
 
 @router.post("/login", response_model=Token)
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
     """Autentica o estudante e retorna o token JWT."""
-    user = db.query(User).filter(User.email == user_in.email.lower().strip()).first()
-    if not user or not verify_password(user_in.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou senha incorretos."
-        )
-    
-    access_token = create_access_token(subject=user.id)
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse.model_validate(user)
-    )
+    return _token_for_user(_authenticate_user(user_in.email, user_in.password, db))
+
+
+@router.post("/token", response_model=Token)
+def login_for_swagger(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """Autentica pelo fluxo OAuth2 Password usado pelo botão Authorize do Swagger."""
+    return _token_for_user(_authenticate_user(form_data.username, form_data.password, db))
 
 @router.post("/forgot-password")
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):

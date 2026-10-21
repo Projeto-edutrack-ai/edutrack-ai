@@ -20,3 +20,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db():
+    """Cria tabelas ausentes e aplica a migração aditiva (sem apagar dados)."""
+    from app.core.migrations import run_migrations
+    Base.metadata.create_all(bind=engine)
+    run_migrations(engine)

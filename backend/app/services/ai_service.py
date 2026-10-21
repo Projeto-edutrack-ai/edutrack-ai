@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.subject import Subject

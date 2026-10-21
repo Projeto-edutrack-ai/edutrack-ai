@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -21,6 +21,20 @@ class AcademicTask(Base):
     
     completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Origem Google Classroom (via Xano). Registros locais: source="local" e IDs nulos.
+    # actual_time_minutes, estimated_time_minutes e status (manual) continuam locais.
+    source = Column(String, nullable=False, default="local", server_default="local")
+    classroom_coursework_id = Column(String, nullable=True)
+    classroom_link = Column(String, nullable=True)
+    max_points = Column(Float, nullable=True)
+    classroom_submission_state = Column(String, nullable=True)
+    classroom_synced_at = Column(DateTime, nullable=True)
+
+    # O courseWork.id do Classroom é único apenas dentro do curso (= subject)
+    __table_args__ = (
+        Index("uq_tasks_user_subject_coursework", "user_id", "subject_id", "classroom_coursework_id", unique=True),
+    )
 
     # Relacionamentos
     user = relationship("User", back_populates="academic_tasks")

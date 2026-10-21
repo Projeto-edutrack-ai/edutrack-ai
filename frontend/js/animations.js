@@ -49,8 +49,12 @@ const Toast = {
 };
 
 const AppAnimations = {
+  prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  },
+
   init() {
-    if (typeof gsap === 'undefined') return;
+    if (typeof gsap === 'undefined' || this.prefersReducedMotion()) return;
 
     if (typeof ScrollTrigger !== 'undefined') {
       gsap.registerPlugin(ScrollTrigger);
@@ -90,7 +94,7 @@ const AppAnimations = {
   },
 
   animateSectionChange(sectionElement) {
-    if (!sectionElement || typeof gsap === 'undefined') return;
+    if (!sectionElement || typeof gsap === 'undefined' || this.prefersReducedMotion()) return;
     
     gsap.fromTo(sectionElement,
       { opacity: 0, y: 18 },
@@ -109,7 +113,7 @@ const AppAnimations = {
 
   animateCardsStagger(containerSelector, itemSelector = '.pro-card') {
     const container = document.querySelector(containerSelector);
-    if (!container || typeof gsap === 'undefined') return;
+    if (!container || typeof gsap === 'undefined' || this.prefersReducedMotion()) return;
 
     const items = container.querySelectorAll(itemSelector);
     if (items.length === 0) return;
@@ -121,7 +125,7 @@ const AppAnimations = {
   },
 
   animateModalOpen(modalBoxElement) {
-    if (!modalBoxElement || typeof gsap === 'undefined') return;
+    if (!modalBoxElement || typeof gsap === 'undefined' || this.prefersReducedMotion()) return;
     gsap.fromTo(modalBoxElement,
       { opacity: 0, scale: 0.9, y: 25 },
       { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(1.6)' }
@@ -131,6 +135,13 @@ const AppAnimations = {
   animateNumber(element, targetValue, suffix = '', duration = 1.0) {
     if (!element) return;
     const num = parseFloat(targetValue) || 0;
+
+    if (this.prefersReducedMotion() || typeof gsap === 'undefined') {
+      const isFloat = num % 1 !== 0;
+      element.textContent = `${isFloat ? num.toFixed(1) : Math.round(num)}${suffix}`;
+      return;
+    }
+
     const obj = { val: 0 };
 
     gsap.to(obj, {
@@ -145,6 +156,8 @@ const AppAnimations = {
   },
 
   initParallaxLayers() {
+    if (this.prefersReducedMotion()) return;
+
     // Parallax suave com o movimento do mouse
     const orbs = document.querySelectorAll('.ambient-orb');
     if (orbs.length > 0) {
@@ -166,7 +179,7 @@ const AppAnimations = {
   },
 
   initScrollReveals() {
-    if (typeof ScrollTrigger === 'undefined') return;
+    if (typeof ScrollTrigger === 'undefined' || this.prefersReducedMotion()) return;
 
     gsap.utils.toArray('[data-animate="fade-up"]').forEach(elem => {
       gsap.fromTo(elem,

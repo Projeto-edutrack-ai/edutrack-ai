@@ -12,28 +12,18 @@ const App = {
     this.bindGlobalSearch();
 
     Auth.init();
+    Classroom.bindEvents();
+    Classroom.handleReturn();
     
-    // Ao fazer login, carregar todos os dados e (re)iniciar o ScrollWorld com as matérias do aluno
     window.addEventListener('auth-success', () => {
-      this.loadAllViews().then(() => {
-        // ScrollWorld já ouve 'auth-success' internamente e chamará loadSubjectsAndBuildPlanets
-        // Mas garantimos também um init caso ainda não tenha sido feito
-        if (typeof ScrollWorld !== 'undefined') {
-          if (!ScrollWorld.isInitialized) {
-            ScrollWorld.init('scroll-world-container');
-          } else {
-            ScrollWorld.loadSubjectsAndBuildPlanets();
-          }
-        }
-      });
+      this.loadAllViews();
     });
 
-    // Se já existe token ao carregar a página (sessão mantida), carregar diretamente
     if (API.getToken()) {
       this.loadAllViews();
     }
 
-    // Inicializar Three.js Scroll World e Animações GSAP (com pequeno delay para o DOM estar pronto)
+    // Inicializar Three.js Scroll World e Animações GSAP
     setTimeout(() => {
       if (typeof ScrollWorld !== 'undefined' && ScrollWorld.init) {
         ScrollWorld.init('scroll-world-container');
@@ -41,7 +31,7 @@ const App = {
       if (typeof AppAnimations !== 'undefined' && AppAnimations.init) {
         AppAnimations.init();
       }
-    }, 200);
+    }, 150);
   },
 
   initTheme() {
@@ -68,53 +58,72 @@ const App = {
   bindNavigation() {
     const navButtons = document.querySelectorAll('[data-tab-target]');
     navButtons.forEach(btn => {
+      const target = btn.dataset.tabTarget;
+      const isCurrent = btn.classList.contains('active');
+
+      btn.type = 'button';
+      btn.setAttribute('aria-controls', `view-${target}`);
+      if (isCurrent) {
+        btn.setAttribute('aria-current', 'page');
+      } else {
+        btn.removeAttribute('aria-current');
+      }
+
       btn.addEventListener('click', () => {
-        const target = btn.dataset.tabTarget;
         this.switchTab(target);
       });
+    });
+
+    document.querySelectorAll('.tab-view-section').forEach(view => {
+      view.setAttribute('aria-hidden', String(view.classList.contains('hidden')));
     });
   },
 
   switchTab(tabName) {
+    const targetView = document.getElementById(`view-${tabName}`);
+    if (!targetView) return;
+
+    const isAlreadyVisible = this.activeTab === tabName && !targetView.classList.contains('hidden');
     this.activeTab = tabName;
 
-    // Atualizar estilo visual dos botões de navegação usando a classe .active
+    // Sincronizar estado visual e semântico no desktop e no mobile.
     document.querySelectorAll('[data-tab-target]').forEach(btn => {
-      if (btn.dataset.tabTarget === tabName) {
-        btn.classList.add('active');
+      const isCurrent = btn.dataset.tabTarget === tabName;
+      btn.classList.toggle('active', isCurrent);
+
+      if (isCurrent) {
+        btn.setAttribute('aria-current', 'page');
       } else {
-        btn.classList.remove('active');
+        btn.removeAttribute('aria-current');
       }
     });
 
     // Atualizar seções de conteúdo com animação GSAP
     document.querySelectorAll('.tab-view-section').forEach(view => {
-      if (view.id === `view-${tabName}`) {
-        view.classList.remove('hidden');
+      const isTarget = view === targetView;
+      view.classList.toggle('hidden', !isTarget);
+      view.setAttribute('aria-hidden', String(!isTarget));
+
+      if (isTarget && !isAlreadyVisible) {
         if (typeof AppAnimations !== 'undefined') {
           AppAnimations.animateSectionChange(view);
         }
-      } else {
-        view.classList.add('hidden');
       }
     });
+
+    // A aba já aberta não precisa reanimar nem refazer chamadas de dados.
+    if (isAlreadyVisible) return;
 
     // Gatilhos de carregamento sob demanda
     if (tabName === 'dashboard') {
       Dashboard.loadAllDashboardData();
-      // Aguarda o container ser visível para que clientWidth != 0 antes de inicializar/redimensionar
       setTimeout(() => {
-        if (typeof ScrollWorld !== 'undefined') {
-          if (!ScrollWorld.isInitialized) {
-            ScrollWorld.init('scroll-world-container');
-          } else {
-            ScrollWorld.resize();
-            ScrollWorld.loadSubjectsAndBuildPlanets();
-          }
+        if (typeof ScrollWorld !== 'undefined' && !ScrollWorld.isInitialized) {
+          ScrollWorld.init('scroll-world-container');
         }
-      }, 120);
+      }, 100);
     }
-    if (tabName === 'subjects') Subjects.loadSubjects();
+    if (tabName === 'subjects') { Subjects.loadSubjects(); Classroom.load(); }
     if (tabName === 'tasks') Tasks.loadTasks();
     if (tabName === 'insights') Insights.loadInsights();
   },

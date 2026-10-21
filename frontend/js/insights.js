@@ -4,20 +4,137 @@
 // ==========================================================================
 
 const Insights = {
+  cacheTtlMs: 30000,
+  lastInsights: null,
+  lastLoadedAt: 0,
+  loadPromise: null,
+  eventsBound: false,
+
   async init() {
-    this.bindEvents();
+    if (!this.eventsBound) {
+      this.bindEvents();
+      this.eventsBound = true;
+    }
+
     await this.loadInsights();
   },
 
-  async loadInsights() {
-    if (!API.getToken()) return;
-
-    try {
-      const insights = await API.getAIInsights();
-      this.renderInsights(insights);
-    } catch (err) {
-      console.error('Erro ao carregar insights de IA:', err);
+  async loadInsights({ force = false } = {}) {
+    if (!API.getToken()) {
+      this.setNavigationState('idle', 'Pronto para analisar');
+      return null;
     }
+
+    const cacheIsFresh = this.lastInsights
+      && (Date.now() - this.lastLoadedAt) < this.cacheTtlMs;
+
+    if (!force && cacheIsFresh) {
+      this.syncNavigationWithInsights(this.lastInsights);
+      return this.lastInsights;
+    }
+
+    if (this.loadPromise) return this.loadPromise;
+
+    this.setNavigationState('loading', 'Analisando dados…');
+    this.setContentBusy(true);
+
+    this.loadPromise = (async () => {
+      try {
+        const insights = await API.getAIInsights();
+        this.lastInsights = insights;
+        this.lastLoadedAt = Date.now();
+        this.renderInsights(insights);
+        this.syncNavigationWithInsights(insights);
+        return insights;
+      } catch (err) {
+        console.error('Erro ao carregar insights de IA:', err);
+        this.setNavigationState('error', 'Atualização indisponível');
+
+        if (!this.lastInsights) {
+          const summaryEl = document.getElementById('ai-summary-text');
+          if (summaryEl) {
+            summaryEl.textContent = 'Não foi possível atualizar a análise agora. Use “Recalcular Insights” para tentar novamente.';
+          }
+        }
+
+        return null;
+      } finally {
+        this.setContentBusy(false);
+        this.loadPromise = null;
+      }
+    })();
+
+    return this.loadPromise;
+  },
+
+  setContentBusy(isBusy) {
+    const insightsView = document.getElementById('view-insights');
+    if (!insightsView) return;
+
+    if (isBusy) {
+      insightsView.setAttribute('aria-busy', 'true');
+    } else {
+      insightsView.removeAttribute('aria-busy');
+    }
+  },
+
+  setNavigationState(state, label) {
+    document.querySelectorAll('[data-tab-target="insights"]').forEach(button => {
+      button.dataset.insightsState = state;
+      button.setAttribute('aria-label', `Insights de IA e relatórios. ${label}.`);
+      button.title = label;
+
+      if (state === 'loading') {
+        button.setAttribute('aria-busy', 'true');
+      } else {
+        button.removeAttribute('aria-busy');
+      }
+    });
+
+    document.querySelectorAll('[data-insights-nav-status]').forEach(status => {
+      status.textContent = label;
+    });
+
+    const announcer = document.getElementById('insights-nav-announcer');
+    if (announcer) announcer.textContent = label;
+  },
+
+  syncNavigationWithInsights(insights) {
+    const criticalCount = Array.isArray(insights?.critical_alerts)
+      ? insights.critical_alerts.length
+      : 0;
+    const recommendationCount = Array.isArray(insights?.recommendations)
+      ? insights.recommendations.length
+      : 0;
+    const focusCount = Array.isArray(insights?.weekly_focus)
+      ? insights.weekly_focus.length
+      : 0;
+
+    if (criticalCount > 0) {
+      const label = criticalCount === 1
+        ? '1 alerta crítico'
+        : `${criticalCount} alertas críticos`;
+      this.setNavigationState('attention', label);
+      return;
+    }
+
+    if (recommendationCount > 0) {
+      const label = recommendationCount === 1
+        ? '1 recomendação'
+        : `${recommendationCount} recomendações`;
+      this.setNavigationState('ready', label);
+      return;
+    }
+
+    if (focusCount > 0) {
+      const label = focusCount === 1
+        ? '1 prioridade semanal'
+        : `${focusCount} prioridades semanais`;
+      this.setNavigationState('ready', label);
+      return;
+    }
+
+    this.setNavigationState('ready', 'Análise em dia');
   },
 
   renderInsights(insights) {
@@ -96,28 +213,17 @@ const Insights = {
         `).join('');
       }
     }
-
-    // Update sidebar badge count
-    const badgeCount = document.getElementById('sidebar-insights-count');
-    if (badgeCount) {
-      const totalRecs = (insights.recommendations || []).length + (insights.critical_alerts || []).length;
-      if (totalRecs > 0) {
-        badgeCount.textContent = totalRecs;
-        badgeCount.classList.remove('hidden');
-        badgeCount.classList.add('flex');
-      } else {
-        badgeCount.classList.add('hidden');
-        badgeCount.classList.remove('flex');
-      }
-    }
   },
 
   bindEvents() {
     const downloadBtn = document.getElementById('btn-download-weekly-pdf');
     if (downloadBtn) {
+      const defaultDownloadContent = downloadBtn.innerHTML;
+
       downloadBtn.addEventListener('click', async () => {
         try {
           downloadBtn.disabled = true;
+          downloadBtn.setAttribute('aria-busy', 'true');
           downloadBtn.innerHTML = '<span>⏳</span> <span>Gerando PDF Inteligente...</span>';
           await API.downloadWeeklyReport();
           Toast.show('Relatório Semanal baixado com sucesso!', 'success');
@@ -125,18 +231,33 @@ const Insights = {
           Toast.show('Erro ao gerar PDF: ' + err.message, 'error');
         } finally {
           downloadBtn.disabled = false;
-          downloadBtn.innerHTML = '<span>📄</span> <span>Baixar Relatório Semanal (PDF)</span>';
+          downloadBtn.removeAttribute('aria-busy');
+          downloadBtn.innerHTML = defaultDownloadContent;
         }
       });
     }
 
     const refreshBtn = document.getElementById('btn-refresh-insights');
     if (refreshBtn) {
+      const defaultRefreshContent = refreshBtn.innerHTML;
+
       refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.setAttribute('aria-busy', 'true');
         refreshBtn.innerHTML = '<span>🔄</span> <span>Recalculando...</span>';
-        await this.loadInsights();
-        refreshBtn.innerHTML = '<span>✨</span> <span>Recalcular Insights</span>';
-        Toast.show('Diagnóstico de IA recalculado com sucesso!', 'success');
+
+        try {
+          const insights = await this.loadInsights({ force: true });
+          if (insights) {
+            Toast.show('Diagnóstico de IA recalculado com sucesso!', 'success');
+          } else {
+            Toast.show('Não foi possível recalcular o diagnóstico agora.', 'error');
+          }
+        } finally {
+          refreshBtn.disabled = false;
+          refreshBtn.removeAttribute('aria-busy');
+          refreshBtn.innerHTML = defaultRefreshContent;
+        }
       });
     }
   }

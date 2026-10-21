@@ -38,7 +38,6 @@
 
   <!-- Three.js (3D Graphics & Scroll World) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <!-- GSAP & ScrollTrigger (Smooth Scroll, Parallax & Scroll-Driven Animations) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -136,65 +135,11 @@
     </div>
   </div>
 
-  <!-- ================= FORGOT PASSWORD MODAL ================= -->
-  <div id="modal-forgot-password-overlay" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="pro-card max-w-md w-full p-6 sm:p-7 border border-slate-200/80 dark:border-slate-800/80 relative z-10 shadow-2xl modal-animate-in">
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recuperação de Senha</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Enviaremos instruções para o seu e-mail</p>
-          </div>
-        </div>
-        <button id="btn-close-forgot-modal" type="button" class="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors btn-press">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      <div id="forgot-password-alert" class="hidden mb-4 p-3 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs rounded-xl border border-blue-200 dark:border-blue-900 flex items-start gap-2">
-        <span class="mt-0.5">ℹ️</span>
-        <span id="forgot-password-alert-text"></span>
-      </div>
-
-      <form id="form-forgot-password" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">E-mail Acadêmico Cadastrado</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2"/>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-              </svg>
-            </span>
-            <input id="forgot-email-input" type="email" required placeholder="seu.email@faculdade.edu.br" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs text-slate-900 dark:text-white" />
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">Você receberá um link temporário com instruções para definir uma nova senha de acesso.</p>
-        </div>
-
-        <div class="flex items-center justify-end gap-2.5 pt-2">
-          <button type="button" id="btn-cancel-forgot-modal" class="px-4 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors btn-press border border-slate-200 dark:border-slate-700">
-            Voltar ao Login
-          </button>
-          <button type="submit" id="btn-submit-forgot" class="px-5 py-2.5 btn-gradient rounded-xl font-bold text-xs shadow-md btn-press flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span>Enviar Instruções</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- ================= MAIN APP CONTAINER ================= -->
   <div id="main-app-container" class="flex-1 flex flex-col md:flex-row min-h-screen relative z-10">
 
     <!-- ================= ULTRA-PROFESSIONAL SIDEBAR (LINEAR / STRIPE STYLE) ================= -->
-    <aside class="hidden md:flex flex-col w-64 bg-white/80 dark:bg-[#0c121e]/90 backdrop-blur-xl border-r border-slate-200/70 dark:border-slate-800/70 p-4 select-none sticky top-0 h-screen justify-between z-20">
+    <aside class="hidden lg:flex flex-col w-64 bg-white/80 dark:bg-[#0c121e]/90 backdrop-blur-xl border-r border-slate-200/70 dark:border-slate-800/70 p-4 select-none sticky top-0 h-screen justify-between z-20">
       
       <div>
         <!-- Brand Header with Vector Logo -->
@@ -256,45 +201,43 @@
         </div>
 
         <!-- Section 3: Inteligência Artificial -->
-        <div class="space-y-1">
-          <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-1.5">Inteligência & Relatórios</p>
-          <div class="relative group/insights">
-            <button data-tab-target="insights" class="nav-link-pro w-full btn-press">
-              <svg class="nav-icon text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="intelligence-nav-group space-y-1">
+          <p class="nav-section-heading">
+            <span>Inteligência & Relatórios</span>
+            <span class="nav-section-spark" aria-hidden="true"></span>
+          </p>
+
+          <button
+            type="button"
+            data-tab-target="insights"
+            data-insights-state="idle"
+            class="nav-link-pro nav-link-insights w-full btn-press"
+            aria-controls="view-insights"
+            aria-label="Insights de IA e relatórios. Pronto para analisar."
+          >
+            <span class="ai-nav-icon-wrap" aria-hidden="true">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                 <path d="M5 3v4"/>
                 <path d="M19 17v4"/>
                 <path d="M3 5h4"/>
                 <path d="M17 19h4"/>
               </svg>
-              <span class="flex-1 text-left">Insights & PDF</span>
-              <span id="sidebar-insights-count" class="hidden text-[9px] font-black rounded-full bg-rose-500 text-white min-w-[18px] h-[18px] flex items-center justify-center">0</span>
-              <span class="ai-badge-animated text-[10px] font-mono px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-                AI
+            </span>
+
+            <span class="ai-nav-copy">
+              <span class="ai-nav-title-row">
+                <span class="ai-nav-title">Insights de IA</span>
+                <span class="ai-nav-badge" aria-hidden="true">IA</span>
               </span>
-            </button>
-            <!-- Hover tooltip -->
-            <div class="absolute left-3 right-3 top-full mt-1 p-2.5 rounded-xl bg-slate-900/95 dark:bg-slate-800/95 text-[10px] text-slate-300 font-medium opacity-0 group-hover/insights:opacity-100 transition-opacity duration-200 pointer-events-none z-30 shadow-xl border border-slate-700/50 backdrop-blur-sm">
-              <p class="flex items-center gap-1.5"><span class="text-indigo-400">✨</span> Diagnóstico inteligente baseado em desvio tempo estimado vs. real</p>
-              <p class="flex items-center gap-1.5 mt-1"><span class="text-blue-400">📄</span> Relatório PDF semanal com gráficos</p>
-            </div>
-          </div>
+              <span class="ai-nav-meta">
+                <span class="ai-nav-state-dot" aria-hidden="true"></span>
+                <span data-insights-nav-status>Pronto para analisar</span>
+              </span>
+            </span>
+          </button>
         </div>
       </div>
-
-      <!-- Quick Actions Strip -->
-        <div class="flex items-center gap-1.5 px-2 py-2 mt-3 border-t border-slate-200/50 dark:border-slate-800/50">
-          <button onclick="Insights.loadInsights(); App.switchTab('insights');" title="Recalcular IA" class="flex-1 p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all btn-press flex items-center justify-center">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/><path d="M17 3v4"/><path d="M15 5h4"/></svg>
-          </button>
-          <button onclick="document.getElementById('btn-download-weekly-pdf').click()" title="Baixar PDF" class="flex-1 p-2 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all btn-press flex items-center justify-center">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-          <button onclick="Auth.openProfileModal()" title="Meu Perfil" class="flex-1 p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all btn-press flex items-center justify-center">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </button>
-        </div>
 
       <!-- ================= USER PROFILE CARD (CLICK TO EDIT) ================= -->
       <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800/60">
@@ -329,7 +272,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col pb-20 md:pb-6 overflow-y-auto">
+    <main class="app-main flex-1 flex flex-col pb-20 lg:pb-6 overflow-y-auto">
 
       <!-- Top Header (Sticky Section) -->
       <header class="sticky-app-header bg-white/70 dark:bg-[#090d16]/70 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-6 py-3.5 flex items-center justify-between gap-4">
@@ -411,48 +354,20 @@
 
         <!-- ================= THREE.JS SCROLL WORLD SHOWCASE ================= -->
         <div data-animate="fade-up" class="relative group">
-          <div id="scroll-world-container" class="pro-card relative border border-blue-500/20 shadow-xl select-none">
+          <div id="scroll-world-container" class="pro-card relative border border-blue-500/20 overflow-hidden shadow-xl">
             <!-- Overlay Info on 3D Canvas -->
             <div class="absolute top-4 left-5 z-10 pointer-events-none">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-blue-600/90 text-white rounded-lg backdrop-blur-md shadow-sm">
-                  🌌 Sistema Planetário 3D
-                </span>
-                <span id="planets-count-badge" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-500/30 rounded-full backdrop-blur-md">
-                  0 Planetas
-                </span>
-              </div>
-              <h3 class="text-base md:text-lg font-black text-white mt-1.5 drop-shadow-md flex items-center gap-2">
-                <span>Galáxia de Disciplinas</span>
-              </h3>
-              <p class="text-[11px] text-blue-200/90 font-medium">Arraste para girar em qualquer direção (360°) • Cada matéria é um planeta orbital</p>
+              <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-blue-600/80 text-white rounded-lg backdrop-blur-md">
+                Scroll World 3D Universe
+              </span>
+              <h3 class="text-base md:text-lg font-black text-white mt-1 drop-shadow-md">Navegação Espacial Acadêmica</h3>
+              <p class="text-[11px] text-blue-200/90 font-medium">Role a página ou mova o mouse para orbitar as matérias</p>
             </div>
 
-            <!-- Interactivity Help & Status Badges -->
-            <div class="absolute bottom-4 left-5 right-5 z-10 pointer-events-none flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 text-[10px] font-bold bg-slate-900/80 text-blue-300 rounded-xl border border-blue-500/30 backdrop-blur-md flex items-center gap-1.5">
-                  <span>🖱️</span> <span>Gire com o mouse ou toque</span>
-                </span>
-                <span class="hidden sm:inline-flex px-2.5 py-1 text-[10px] font-bold bg-slate-900/80 text-purple-300 rounded-xl border border-purple-500/30 backdrop-blur-md items-center gap-1.5">
-                  <span>🔍</span> <span>Scroll para zoom</span>
-                </span>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <button type="button" onclick="event.stopPropagation(); if(typeof ScrollWorld !== 'undefined') ScrollWorld.resetCamera();" class="pointer-events-auto px-2.5 py-1 text-[10px] font-bold bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 backdrop-blur-md transition-colors flex items-center gap-1">
-                  <span>🔄</span> <span>Resetar Vista</span>
-                </button>
-                <span class="px-3 py-1 text-[11px] font-bold bg-slate-900/80 text-emerald-400 rounded-xl border border-emerald-500/30 backdrop-blur-md flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Tempo Real
-                </span>
-              </div>
-            </div>
-
-            <!-- Tooltip flutuante de hover do planeta -->
-            <div id="planet-tooltip-3d" class="absolute hidden pointer-events-none z-20 px-3 py-2 rounded-xl bg-slate-950/90 text-white border border-blue-500/40 shadow-2xl backdrop-blur-md text-xs font-semibold transform -translate-x-1/2 -translate-y-full transition-opacity">
-              <p id="planet-tooltip-name" class="font-bold text-blue-400 text-xs">Disciplina</p>
-              <p id="planet-tooltip-info" class="text-[10px] text-slate-300">0h • 0 tarefas</p>
+            <div class="absolute bottom-4 right-5 z-10 pointer-events-none flex items-center gap-2">
+              <span class="px-3 py-1 text-[11px] font-bold bg-slate-900/80 text-emerald-400 rounded-xl border border-emerald-500/30 backdrop-blur-md flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Sincronizado com ScrollTrigger
+              </span>
             </div>
           </div>
         </div>
@@ -611,7 +526,7 @@
 
       <!-- ================= TAB 2: SUBJECTS ================= -->
       <section id="view-subjects" class="tab-view-section hidden p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Gerenciamento de Disciplinas</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Organize suas matérias, cargas horárias e professores.</p>
@@ -620,6 +535,32 @@
             <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Nova Disciplina</span>
           </button>
+        </div>
+
+        <!-- Google Classroom (via Xano) -->
+        <div id="classroom-card" class="pro-card p-5 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-black text-slate-900 dark:text-white">🎓 Google Classroom</h3>
+              <p id="classroom-status-text" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verificando conexão...</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-classroom-connect" class="hidden px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press">Conectar Google Classroom</button>
+              <button id="btn-classroom-sync" class="hidden px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press">Sincronizar agora</button>
+              <button id="btn-classroom-disconnect" class="hidden px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 btn-press">Desconectar</button>
+            </div>
+          </div>
+          <p id="classroom-last-sync" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+          <div id="classroom-imported" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-xs font-black text-slate-700 dark:text-slate-200 mb-1">Cursos importados</h4>
+              <ul id="classroom-courses-list"></ul>
+            </div>
+            <div>
+              <h4 class="text-xs font-black text-slate-700 dark:text-slate-200 mb-1">Atividades importadas</h4>
+              <ul id="classroom-tasks-list"></ul>
+            </div>
+          </div>
         </div>
 
         <!-- Filter / Search Subjects -->
@@ -680,8 +621,8 @@
       <!-- ================= TAB 4: INSIGHTS & REPORTS ================= -->
       <section id="view-insights" class="tab-view-section hidden p-4 md:p-6 space-y-6 max-w-7xl mx-auto w-full">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-2">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
               <h2 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Insights de IA & Relatórios</h2>
               <span id="ai-engine-badge" class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
                 ✨ EduTrack Analytics Engine
@@ -690,11 +631,11 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Diagnósticos baseados no desvio entre tempo planejado vs. tempo real e velocidade.</p>
           </div>
 
-          <div class="flex items-center gap-2">
-            <button id="btn-refresh-insights" class="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all btn-press">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <button id="btn-refresh-insights" class="w-full sm:w-auto px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all btn-press flex items-center justify-center gap-1.5">
               ✨ Recalcular Insights
             </button>
-            <button id="btn-download-weekly-pdf" class="px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press flex items-center gap-1.5">
+            <button id="btn-download-weekly-pdf" class="w-full sm:w-auto px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press flex items-center justify-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
@@ -756,10 +697,12 @@
 
     </main>
 
+    <p id="insights-nav-announcer" class="insights-status-announcer" aria-live="polite" aria-atomic="true">Pronto para analisar</p>
+
     <!-- Bottom Navigation Bar Mobile (Sticky Section with Vector SVGs) -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 flex justify-around py-2 z-30 shadow-lg mobile-bottom-nav">
-      <button data-tab-target="dashboard" class="flex flex-col items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold p-1">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <nav class="mobile-bottom-nav lg:hidden" aria-label="Navegação principal">
+      <button type="button" data-tab-target="dashboard" class="mobile-nav-link active" aria-controls="view-dashboard" aria-current="page">
+        <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect width="7" height="7" x="3" y="3" rx="1"/>
           <rect width="7" height="7" x="14" y="3" rx="1"/>
           <rect width="7" height="7" x="14" y="14" rx="1"/>
@@ -767,30 +710,34 @@
         </svg>
         <span>Dashboard</span>
       </button>
-      <button data-tab-target="subjects" class="flex flex-col items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 p-1">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" data-tab-target="subjects" class="mobile-nav-link" aria-controls="view-subjects">
+        <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
         </svg>
         <span>Disciplinas</span>
       </button>
-      <button data-tab-target="tasks" class="flex flex-col items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 p-1">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button type="button" data-tab-target="tasks" class="mobile-nav-link" aria-controls="view-tasks">
+        <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M9 11l3 3L22 4"/>
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
         </svg>
         <span>Tarefas</span>
       </button>
-      <button data-tab-target="insights" class="flex flex-col items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 p-1">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-        </svg>
-        <span>IA</span>
-      </button>
-      <button onclick="Auth.openProfileModal()" class="flex flex-col items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400 p-1">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span>Perfil</span>
+      <button
+        type="button"
+        data-tab-target="insights"
+        data-insights-state="idle"
+        class="mobile-nav-link mobile-nav-link-insights"
+        aria-controls="view-insights"
+        aria-label="Insights de IA e relatórios. Pronto para analisar."
+      >
+        <span class="mobile-nav-icon-wrap">
+          <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <span class="mobile-ai-indicator" aria-hidden="true"></span>
+        </span>
+        <span>Insights</span>
       </button>
     </nav>
 
@@ -1092,6 +1039,7 @@
   <script src="/static/js/auth.js"></script>
   <script src="/static/js/dashboard.js"></script>
   <script src="/static/js/subjects.js"></script>
+  <script src="/static/js/classroom.js"></script>
   <script src="/static/js/tasks.js"></script>
   <script src="/static/js/insights.js"></script>
   <script src="/static/js/app.js"></script>

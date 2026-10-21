@@ -32,11 +32,6 @@ const Dashboard = {
       this.renderCharts(metrics, timeDist);
       this.renderUpcomingTasks(tasks);
       this.populateTimerTasksDropdown(tasks);
-
-      // Sincronizar planetas com as disciplinas do estudante
-      if (typeof ScrollWorld !== 'undefined' && ScrollWorld.loadSubjectsAndBuildPlanets) {
-        ScrollWorld.loadSubjectsAndBuildPlanets();
-      }
     } catch (err) {
       console.error('Erro ao carregar dados do dashboard:', err);
     }

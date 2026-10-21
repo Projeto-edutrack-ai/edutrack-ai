@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, init_db
 import app.models  # Garante registro dos modelos no Base
 
 # Importação dos Roteadores
@@ -17,9 +17,10 @@ from app.api.analytics import router as analytics_router
 from app.api.ai_insights import router as ai_router
 from app.api.reports import router as reports_router
 from app.api.search import router as search_router
+from app.api.classroom import router as classroom_router
 
-# Criação automática de tabelas SQLite
-Base.metadata.create_all(bind=engine)
+# Criação automática de tabelas SQLite + migração aditiva (colunas do Classroom)
+init_db()
 
 app = FastAPI(
     title="EduTrack AI — API Backend Inteligente",
@@ -49,6 +50,7 @@ app.include_router(analytics_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(search_router, prefix=settings.API_V1_STR)
+app.include_router(classroom_router, prefix=settings.API_V1_STR)
 
 # Servir Frontend Estático se existir
 frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"

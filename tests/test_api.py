@@ -17,6 +17,18 @@ def test_login_demo_user():
     assert "course" in data["user"]
     assert "college_year" in data["user"]
 
+def test_swagger_oauth_token_authenticates_protected_routes():
+    response = client.post("/api/auth/token", data={
+        "username": "aluno@edutrack.edu.br",
+        "password": "senha123"
+    })
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    profile = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert profile.status_code == 200
+    assert profile.json()["email"] == "aluno@edutrack.edu.br"
+
 def test_unauthorized_access_subjects():
     response = client.get("/api/subjects")
     assert response.status_code == 401
