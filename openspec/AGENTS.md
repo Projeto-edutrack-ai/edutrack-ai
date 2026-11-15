@@ -17,10 +17,18 @@
 - Use a CLI ou os comandos OpenSpec instalados para criar e arquivar changes. Nao crie manualmente diretorios de change nem use `proposals/` como diario. Preserve as proposals historicas existentes.
 - Para uma nova mudanca, use o fluxo OpenSpec configurado para Gemini (por exemplo, `/opsx:propose`) ou a CLI (`openspec new change`). Nao crie manualmente uma pasta de change: a CLI gera os metadados necessarios.
 - Consulte as especificacoes existentes antes de propor um comportamento novo; atualize-as quando a mudanca alterar o comportamento esperado do produto.
-- Escreva o conteudo dos artefatos em portugues, mantendo os titulos estruturais e palavras-chave exigidos pelo schema OpenSpec.
+- Escreva proposta, design e explicações em português; novos tasks.md devem ser escritos em inglês. Preserve os títulos estruturais e palavras-chave do schema. Não traduza retroativamente artefatos históricos.
 - Mantenha o escopo da proposta, os requisitos, os criterios de aceitacao e as tarefas de implementacao coerentes entre si.
 - Nao marque uma tarefa como concluida sem implementacao e validacao correspondentes.
 - Preserve os artefatos existentes que nao estejam diretamente envolvidos na mudanca.
 
 ## Ferramentas desta revisão
 OpenSpec 1.17.0 foi fixado em package.json. Workflows Antigravity estão em .agents/workflows e skills em .agents/skills; Gemini usa .gemini. Este arquivo contém instruções próprias da equipe e foi preservado após a configuração da CLI. Não execute init/update cegamente: a limpeza de arquivos legados pode removê-lo.
+
+## Estrutura e validação
+- Leia integralmente este arquivo antes de criar propostas ou especificações.
+- proposal.md deve conter # Change: <id>, ## Why, ## What Changes e ## Impact.
+- Specs permanentes usam título, ## Purpose e ## Requirements; deltas em changes usam ## ADDED Requirements, ## MODIFIED Requirements ou ## REMOVED Requirements.
+- Cada ### Requirement: usa SHALL ou MUST e ao menos um #### Scenario: com bullets **WHEN** e **THEN**.
+- Validação: npm run spec:validate (PowerShell: npm.cmd run spec:validate).
+- Arquivar proposta de teste sem implementar exige preservar as tarefas pendentes e não sincronizar deltas como requisitos entregues; consulte as opções de archive da versão instalada.

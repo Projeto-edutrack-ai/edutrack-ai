@@ -7,7 +7,7 @@ context: |
   Existing account linking requires verified persistent mapping, not email matching alone.
   Exact remote fields: titulo_, status with enum pendente / em_andamento-with-trailing-space / concluida; carga_horaria integer.
   Language: Portuguese
-  All artifacts must be written in Portuguese.
+  Proposal, design and explanatory documentation use Portuguese. New tasks.md files MUST use English. Preserve historical artifact languages.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
   Before an AI changes any project file, create or update an OpenSpec change for that exact scope. Track implementation tasks and validation results there, including for small fixes and documentation changes.
 
