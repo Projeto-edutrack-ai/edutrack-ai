@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-05
+goal: Sincronizar cadastro com Xano, redefinicao real de senha e assistente interativo de IA
+skip_specs: true

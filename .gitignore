@@ -7,6 +7,7 @@ __pycache__/
 venv/
 .venv/
 env/
+v/
 
 # Pytest
 .pytest_cache/
@@ -29,7 +30,15 @@ Thumbs.db
 # Logs
 *.log
 
-# Bancos locais
+# Bancos locais e cache
 *.db
 *.sqlite
 *.sqlite3
+CACHEDIR.TAG
+
+# E-mails gravados pelo modo console
+outbox/
+.env
+
+# Ferramentas Node
+node_modules/

@@ -260,5 +260,47 @@ const Insights = {
         }
       });
     }
+
+    // Mentor Educacional Interativo de IA
+    const formAsk = document.getElementById('form-ai-ask');
+    const inputAsk = document.getElementById('ai-ask-input');
+    const responseBox = document.getElementById('ai-response-box');
+    const responseText = document.getElementById('ai-response-text');
+    const responseSource = document.getElementById('ai-response-source');
+    const sendBtn = document.getElementById('btn-send-ai-question');
+
+    if (formAsk && inputAsk) {
+      formAsk.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const question = inputAsk.value.trim();
+        if (!question) return;
+
+        try {
+          sendBtn.disabled = true;
+          sendBtn.innerHTML = '<span>Pensando...</span>';
+          if (responseBox) responseBox.classList.remove('hidden');
+          if (responseText) responseText.textContent = 'Consultando mentor de IA...';
+
+          const res = await API.askAI(question);
+          if (responseText) responseText.textContent = res.answer;
+          if (responseSource) responseSource.textContent = `Gerado via ${res.source}`;
+          Toast.show('Resposta da IA gerada!', 'success');
+        } catch (err) {
+          if (responseText) responseText.textContent = 'Erro ao consultar IA: ' + err.message;
+          Toast.show('Falha ao consultar IA: ' + err.message, 'error');
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = '<span>Perguntar</span><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+        }
+      });
+
+      // Chips de sugestão
+      document.querySelectorAll('.btn-prompt-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          inputAsk.value = chip.dataset.prompt;
+          formAsk.dispatchEvent(new Event('submit'));
+        });
+      });
+    }
   }
 };

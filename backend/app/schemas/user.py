@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 class UserBase(BaseModel):
@@ -38,6 +38,10 @@ class UserLogin(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 class UserResponse(UserBase):
     id: int
     created_at: datetime
@@ -48,6 +52,8 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+    # Resultado da sincronização do aluno com o Xano: {status: synced|failed|skipped, detail, aluno}
+    xano_sync: Optional[Dict[str, Any]] = None
 
 class TokenData(BaseModel):
     user_id: Optional[int] = None

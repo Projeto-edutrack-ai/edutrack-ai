@@ -17,7 +17,8 @@ from app.api.analytics import router as analytics_router
 from app.api.ai_insights import router as ai_router
 from app.api.reports import router as reports_router
 from app.api.search import router as search_router
-from app.api.classroom import router as classroom_router
+from app.api.xano_proxy import router as xano_proxy_router
+from app.api.integration import router as integration_router
 
 # Criação automática de tabelas SQLite + migração aditiva (colunas do Classroom)
 init_db()
@@ -36,7 +37,7 @@ app = FastAPI(
 # Configuração de CORS para permitir acesso local e Web
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,7 +51,8 @@ app.include_router(analytics_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(search_router, prefix=settings.API_V1_STR)
-app.include_router(classroom_router, prefix=settings.API_V1_STR)
+app.include_router(xano_proxy_router, prefix=settings.API_V1_STR)
+app.include_router(integration_router, prefix=settings.API_V1_STR)
 
 # Servir Frontend Estático se existir
 frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"

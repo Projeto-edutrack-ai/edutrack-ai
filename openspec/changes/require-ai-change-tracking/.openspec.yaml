@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-26
+goal: Registrar no OpenSpec todas as alteracoes feitas por IA
+skip_specs: true

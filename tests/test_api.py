@@ -82,3 +82,27 @@ def test_login_and_get_analytics():
     pdf_resp = client.get("/api/reports/weekly-pdf", headers=headers)
     assert pdf_resp.status_code == 200
     assert pdf_resp.headers["content-type"] == "application/pdf"
+
+def test_forgot_password_never_reveals_whether_email_exists():
+    known = client.post("/api/auth/forgot-password", json={"email": "aluno@edutrack.edu.br"})
+    unknown = client.post("/api/auth/forgot-password", json={"email": "ninguem@nao-existe.com"})
+    assert known.status_code == unknown.status_code == 200
+    assert known.json()["message"] == unknown.json()["message"]
+    assert "aluno@edutrack.edu.br" not in known.json()["message"]
+
+def test_ai_assistant_ask():
+    login_resp = client.post("/api/auth/login", json={
+        "email": "aluno@edutrack.edu.br",
+        "password": "senha123"
+    })
+    token = login_resp.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    ask_resp = client.post("/api/ai/ask", headers=headers, json={
+        "question": "Como devo priorizar minhas tarefas hoje?"
+    })
+    assert ask_resp.status_code == 200
+    data = ask_resp.json()
+    assert "answer" in data
+    assert len(data["answer"]) > 10
+    assert "source" in data

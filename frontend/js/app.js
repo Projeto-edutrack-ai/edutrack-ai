@@ -12,8 +12,6 @@ const App = {
     this.bindGlobalSearch();
 
     Auth.init();
-    Classroom.bindEvents();
-    Classroom.handleReturn();
     
     window.addEventListener('auth-success', () => {
       this.loadAllViews();
@@ -123,37 +121,54 @@ const App = {
         }
       }, 100);
     }
-    if (tabName === 'subjects') { Subjects.loadSubjects(); Classroom.load(); }
+    if (tabName === 'subjects') Subjects.loadSubjects();
     if (tabName === 'tasks') Tasks.loadTasks();
     if (tabName === 'insights') Insights.loadInsights();
   },
 
   bindGlobalSearch() {
-    const searchInput = document.getElementById('global-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-          const query = searchInput.value.trim();
-          if (query) {
-            this.switchTab('tasks');
-            const taskSearchInput = document.getElementById('task-search-input');
-            if (taskSearchInput) {
-              taskSearchInput.value = query;
-              Tasks.loadTasks();
-            }
-          }
+    const input = document.getElementById('global-search-input');
+    const checkbox = document.getElementById('global-search-overdue');
+    const output = document.getElementById('global-search-results');
+    let revision = 0;
+    const run = async () => {
+      const requestId = ++revision;
+      const q = input.value.trim();
+      if (!q && !checkbox.checked) { output.replaceChildren(); output.hidden = true; return; }
+      output.hidden = false;
+      output.textContent = 'Buscando...';
+      try {
+        const data = await API.search(q, null, checkbox.checked);
+        if (requestId !== revision) return;
+        output.replaceChildren();
+        const summary = document.createElement('p');
+        summary.textContent = `${data.total_matches} resultado(s)`;
+        output.appendChild(summary);
+        for (const [kind, rows, tab] of [['Disciplina',data.subjects,'subjects'],['Tarefa',data.tasks,'tasks']]) {
+          rows.forEach(item => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'block w-full text-left py-2 border-b border-slate-200 dark:border-slate-700';
+            button.textContent = `${kind}: ${item.name || item.title}`;
+            button.addEventListener('click', () => { this.switchTab(tab); output.hidden = true; });
+            output.appendChild(button);
+          });
         }
-      });
-    }
+      } catch (error) {
+        if (requestId === revision) output.textContent = error.message || 'Busca indisponível.';
+      }
+    };
+    input?.addEventListener('keydown', event => {if(event.key === 'Enter') {event.preventDefault();run();}});
+    checkbox?.addEventListener('change', run);
   },
 
   async loadAllViews() {
-    await Promise.all([
-      Dashboard.init(),
-      Subjects.init(),
-      Tasks.init(),
-      Insights.init()
-    ]);
+    if (!this.viewsInitialized) {
+      this.viewsInitialized = true;
+      await Promise.all([Dashboard.init(), Subjects.init(), Tasks.init(), Insights.init()]);
+    } else {
+      await Promise.all([Dashboard.loadAllDashboardData(), Subjects.loadSubjects(), Tasks.loadTasks(), Insights.loadInsights()]);
+    }
   }
 };
 

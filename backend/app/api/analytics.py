@@ -5,6 +5,7 @@ from app.models.user import User
 from app.schemas.analytics import OverallProgressMetrics, TimeDistributionResponse
 from app.services.progress_engine import ProgressEngine
 from app.api.deps import get_current_user
+from app.services.xano_crud import require_mirror, academic_source_scope
 
 router = APIRouter(prefix="/analytics", tags=["Analytics e Métricas"])
 
@@ -21,7 +22,9 @@ def get_progress_analytics(
     - Velocidade de conclusão e data estimada
     - Detalhamento por disciplina com desvio de tempo
     """
-    return ProgressEngine.calculate_overall_metrics(db, current_user.id)
+    require_mirror(db, current_user)  # usa os dados reais gravados no Xano
+    with academic_source_scope(db):
+        return ProgressEngine.calculate_overall_metrics(db, current_user.id)
 
 @router.get("/time-spent", response_model=TimeDistributionResponse)
 def get_time_distribution(
@@ -29,4 +32,6 @@ def get_time_distribution(
     db: Session = Depends(get_db)
 ):
     """Retorna a distribuição de tempo estudado por disciplina para gráficos em pizza/barras."""
-    return ProgressEngine.get_time_distribution(db, current_user.id)
+    require_mirror(db, current_user)
+    with academic_source_scope(db):
+        return ProgressEngine.get_time_distribution(db, current_user.id)

@@ -13,11 +13,13 @@ from sqlalchemy import text
 
 # tabela -> [(coluna, tipo/DDL SQLite)]. Colunas NOT NULL exigem DEFAULT constante no SQLite.
 COLUMN_MIGRATIONS: Dict[str, List[Tuple[str, str]]] = {
+    "users": [("xano_aluno_id", "INTEGER"), ("xano_binding_base", "VARCHAR")],
     "subjects": [
         ("source", "VARCHAR NOT NULL DEFAULT 'local'"),
         ("classroom_course_id", "VARCHAR"),
         ("classroom_link", "VARCHAR"),
         ("classroom_synced_at", "DATETIME"),
+        ("xano_id", "INTEGER"),
     ],
     "academic_tasks": [
         ("source", "VARCHAR NOT NULL DEFAULT 'local'"),
@@ -26,11 +28,13 @@ COLUMN_MIGRATIONS: Dict[str, List[Tuple[str, str]]] = {
         ("max_points", "FLOAT"),
         ("classroom_submission_state", "VARCHAR"),
         ("classroom_synced_at", "DATETIME"),
+        ("xano_id", "INTEGER"),
     ],
 }
 
 # (nome do índice, tabela, colunas) — todos únicos. Nomes iguais aos declarados nos modelos.
 UNIQUE_INDEXES: List[Tuple[str, str, Tuple[str, ...]]] = [
+    ("uq_users_xano_aluno", "users", ("xano_aluno_id",)),
     ("uq_subjects_user_classroom_course", "subjects", ("user_id", "classroom_course_id")),
     ("uq_tasks_user_subject_coursework", "academic_tasks", ("user_id", "subject_id", "classroom_coursework_id")),
 ]

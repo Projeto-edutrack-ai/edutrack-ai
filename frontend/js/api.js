@@ -1,10 +1,5 @@
 // API Client for EduTrack AI - Integrado com Xano CRUD APIs
-const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-  ? `${window.location.origin}/api`
-  : 'http://localhost:8000/api';
-
-// URL Base do grupo de CRUD do Xano
-const XANO_BASE_URL = 'https://x8ki-letl-twmt.n7.xano.io/api:d_CNfVCs';
+const API_BASE = (window.EDUTRACK_CONFIG?.apiBase || `${window.location.origin}/api`).replace(/\/$/, '');
 
 const API = {
   getToken() {
@@ -50,44 +45,24 @@ const API = {
     }
   },
 
+  // O backend (FastAPI) cria/localiza o aluno na tabela `alunos` do Xano, por e-mail (sem duplicar).
   async syncXanoAluno(user) {
     if (!user) return null;
     try {
-      const alunos = await this.xanoRequest('/alunos', { method: 'GET' });
-      const list = Array.isArray(alunos) ? alunos : (alunos?.items || []);
-      
-      // Busca aluno pelo e-mail do usuário autenticado
-      let matched = list.find(a => a.email && a.email.toLowerCase() === (user.email || '').toLowerCase());
-
-      if (!matched && list.length > 0) {
-        // Fallback por nome
-        matched = list.find(a => a.nome && a.nome.toLowerCase() === (user.name || '').toLowerCase());
+      const result = await this.request('/auth/xano-sync', { method: 'POST' });
+      if (result && result.aluno) {
+        this.setXanoAluno(result.aluno);
+        return result.aluno;
       }
-
-      if (!matched) {
-        // Cadastra novo aluno no Xano para este usuário (dinâmico, sem fixar ID 1)
-        matched = await this.xanoRequest('/alunos', {
-          method: 'POST',
-          body: JSON.stringify({
-            nome: user.name || 'Estudante',
-            email: user.email || `aluno_${Date.now()}@edutrack.edu.br`,
-            curso: user.course || 'Ciência da Computação',
-            semestre: parseInt(user.college_year) || 1
-          })
-        });
-      }
-
-      if (matched && matched.id > 0) {
-        this.setXanoAluno(matched);
-      }
-      return matched;
+      console.warn('[Xano] Sincronização do aluno não concluída:', result && result.detail);
     } catch (err) {
       console.warn('[Xano] Falha ao sincronizar aluno:', err);
-      return this.getXanoAluno();
     }
+    localStorage.removeItem('edutrack_xano_aluno');
+    return null;
   },
 
-  // ===== Requisições genéricas para a API local (Auth, Analytics, Classroom) =====
+  // ===== Requisições genéricas para a API local (Auth e Analytics) =====
   async request(endpoint, options = {}) {
     const token = this.getToken();
     const headers = {
@@ -128,66 +103,48 @@ const API = {
 
   // ===== Requisições para o grupo CRUD do Xano (/alunos, /materias, /tarefas) =====
   async xanoRequest(endpoint, options = {}) {
-    const url = `${XANO_BASE_URL}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    };
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers
-      });
-
-      if (!response.ok) {
-        let errorMsg = `Erro na API Xano (${response.status})`;
-        try {
-          const errData = await response.json();
-          errorMsg = errData.message || errData.payload?.message || errorMsg;
-        } catch {
-          errorMsg = response.statusText || errorMsg;
-        }
-        throw new Error(errorMsg);
-      }
-
-      if (response.status === 204) {
-        return null;
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`[Xano Error] ${options.method || 'GET'} ${endpoint}:`, error);
-      throw error;
-    }
+    return this.request(`/xano${endpoint}`, options);
   },
 
   // ==========================================
   // Auth Endpoints (Preservada autenticação)
   // ==========================================
+  // O backend já sincroniza o aluno com o Xano e devolve o resultado em `xano_sync`.
+  _storeXanoSync(res) {
+    localStorage.removeItem('edutrack_xano_aluno');
+    if (res && res.xano_sync && res.xano_sync.aluno) {
+      this.setXanoAluno(res.xano_sync.aluno);
+    }
+    return res;
+  },
+
   async login(email, password) {
     const res = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-    if (res && res.user) {
-      // Sincroniza em segundo plano com a tabela alunos do Xano
-      this.syncXanoAluno(res.user).catch(() => {});
-    }
-    return res;
+    return this._storeXanoSync(res);
   },
 
-  register(name, email, password) {
-    return this.request('/auth/register', {
+  async register(name, email, password) {
+    const res = await this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ name, email, password })
     });
+    return this._storeXanoSync(res);
   },
 
   forgotPassword(email) {
     return this.request('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email })
+    });
+  },
+
+  resetPassword(token, newPassword) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword })
     });
   },
 
@@ -249,30 +206,10 @@ const API = {
       this.setXanoAluno(updatedAluno);
     }
 
-    // Atualiza dados locais do estudante
-    const updatedUser = {
-      ...user,
-      name: profileData.name !== undefined ? profileData.name : user.name,
-      course: profileData.course !== undefined ? profileData.course : user.course,
-      college_year: profileData.college_year !== undefined ? profileData.college_year : user.college_year,
-      institution: profileData.institution !== undefined ? profileData.institution : user.institution,
-      bio: profileData.bio !== undefined ? profileData.bio : user.bio,
-      avatar_url: profileData.avatar_url !== undefined ? profileData.avatar_url : user.avatar_url
-    };
+    const updatedUser = await this.request('/auth/profile', {
+      method:'PUT', body:JSON.stringify(profileData)
+    });
     this.setCurrentUser(updatedUser);
-
-    // Tenta atualizar no backend local também se houver token
-    if (this.getToken()) {
-      try {
-        await this.request('/auth/profile', {
-          method: 'PUT',
-          body: JSON.stringify(profileData)
-        });
-      } catch (e) {
-        console.warn('Atualização local de perfil ignorada:', e);
-      }
-    }
-
     return updatedUser;
   },
 
@@ -284,24 +221,23 @@ const API = {
 
     const [materiasData, tarefasData] = await Promise.all([
       this.xanoRequest('/materias', { method: 'GET' }),
-      this.xanoRequest('/tarefas', { method: 'GET' }).catch(() => [])
+      this.xanoRequest('/tarefas', { method: 'GET' })
     ]);
 
     let materias = Array.isArray(materiasData) ? materiasData : (materiasData?.items || []);
     const tarefas = Array.isArray(tarefasData) ? tarefasData : (tarefasData?.items || []);
 
-    // Se temos um aluno identificado, filtramos as matérias dele (se existirem)
+    // Cada aluno vê somente as próprias matérias (sem cair para as de outros alunos)
     if (currentAluno && currentAluno.id && currentAluno.id > 0) {
-      const alunoMaterias = materias.filter(m => m.alunos_id === currentAluno.id);
-      if (alunoMaterias.length > 0) {
-        materias = alunoMaterias;
-      }
+      materias = materias.filter(m => m.alunos_id === currentAluno.id);
+    } else {
+      materias = [];
     }
 
     let mapped = materias.map(m => {
       const mTasks = tarefas.filter(t => t.materias_id === m.id);
       const total = mTasks.length;
-      const completed = mTasks.filter(t => (t.status_ || '').trim() === 'concluida').length;
+      const completed = mTasks.filter(t => (t.status ?? t.status_ ?? '').trim() === 'concluida').length;
       const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       return {
@@ -314,7 +250,7 @@ const API = {
         total_tasks: total,
         completed_tasks: completed,
         progress_percentage: pct,
-        total_time_spent_minutes: completed * 60
+        total_time_spent_minutes: mTasks.reduce((sum,t) => sum + Number(t.actual_time_minutes || 0), 0)
       };
     });
 
@@ -351,9 +287,9 @@ const API = {
       const user = this.getCurrentUser();
       currentAluno = await this.syncXanoAluno(user);
     }
-    const alunoId = currentAluno ? currentAluno.id : 1;
+    const alunoId = currentAluno ? currentAluno.id : 0;
     if (!alunoId || alunoId <= 0) {
-      throw new Error('Identificador de aluno inválido (não pode ser zero).');
+      throw new Error('Não foi possível vincular sua conta ao Xano. Verifique a conexão e tente novamente.');
     }
 
     const payload = {
@@ -429,17 +365,23 @@ const API = {
   async getTasks(params = {}) {
     const [tarefasData, materiasData] = await Promise.all([
       this.xanoRequest('/tarefas', { method: 'GET' }),
-      this.xanoRequest('/materias', { method: 'GET' }).catch(() => [])
+      this.xanoRequest('/materias', { method: 'GET' })
     ]);
 
-    const tarefas = Array.isArray(tarefasData) ? tarefasData : (tarefasData?.items || []);
-    const materias = Array.isArray(materiasData) ? materiasData : (materiasData?.items || []);
+    const allMaterias = Array.isArray(materiasData) ? materiasData : (materiasData?.items || []);
+    const currentAlunoT = this.getXanoAluno();
+    const materias = currentAlunoT && currentAlunoT.id > 0
+      ? allMaterias.filter(m => m.alunos_id === currentAlunoT.id)
+      : [];
+    const materiaIds = new Set(materias.map(m => m.id));
+    const allTarefas = Array.isArray(tarefasData) ? tarefasData : (tarefasData?.items || []);
+    const tarefas = allTarefas.filter(t => materiaIds.has(t.materias_id));
     const matMap = Object.fromEntries(materias.map(m => [m.id, m.nome]));
 
     let mapped = tarefas.map(t => {
       // Campo 'status' (Xano renomeou status_ → status)
       // Valores: 'pendente', 'em_andamento ' (com espaço!), 'concluida'
-      const rawStatus = (t.status || '').trim();
+      const rawStatus = (t.status ?? t.status_ ?? '').trim();
       let statusUi = 'pending';
       if (rawStatus === 'concluida') statusUi = 'completed';
       else if (rawStatus === 'em_andamento') statusUi = 'in_progress';
@@ -453,8 +395,8 @@ const API = {
         due_date: t.prazo ? (typeof t.prazo === 'number' ? new Date(t.prazo).toISOString() : t.prazo) : null,
         status: statusUi,
         xano_status: t.status,  // valor raw do Xano
-        estimated_time_minutes: 60,
-        actual_time_minutes: statusUi === 'completed' ? 60 : 0
+        estimated_time_minutes: Number(t.estimated_time_minutes ?? 60),
+        actual_time_minutes: Number(t.actual_time_minutes ?? 0)
       };
     });
 
@@ -483,7 +425,7 @@ const API = {
     if (!tarId || tarId <= 0) throw new Error('ID de tarefa inválido.');
 
     const t = await this.xanoRequest(`/tarefas/${tarId}`, { method: 'GET' });
-    const rawStatus = (t.status || '').trim();
+    const rawStatus = (t.status ?? t.status_ ?? '').trim();
     let statusUi = 'pending';
     if (rawStatus === 'concluida') statusUi = 'completed';
     else if (rawStatus === 'em_andamento') statusUi = 'in_progress';
@@ -496,8 +438,8 @@ const API = {
       due_date: t.prazo ? (typeof t.prazo === 'number' ? new Date(t.prazo).toISOString() : t.prazo) : null,
       status: statusUi,
       xano_status: t.status,
-      estimated_time_minutes: 60,
-      actual_time_minutes: statusUi === 'completed' ? 60 : 0
+      estimated_time_minutes: Number(t.estimated_time_minutes ?? 60),
+      actual_time_minutes: Number(t.actual_time_minutes ?? 0)
     };
   },
 
@@ -522,6 +464,8 @@ const API = {
     const payload = {
       materias_id: matId,
       titulo_: (taskData.title || '').trim(),
+      estimated_time_minutes: taskData.estimated_time_minutes ?? 60,
+      actual_time_minutes: taskData.actual_time_minutes ?? 0,
       descricao: (taskData.description || '').trim(),
       prazo: prazoMs,
       status: xanoStatus
@@ -545,8 +489,8 @@ const API = {
       due_date: res.prazo ? new Date(res.prazo).toISOString() : null,
       status: statusUi,
       xano_status: res.status,
-      estimated_time_minutes: parseFloat(taskData.estimated_time_minutes) || 60,
-      actual_time_minutes: parseFloat(taskData.actual_time_minutes) || 0
+      estimated_time_minutes: Number(res.estimated_time_minutes ?? taskData.estimated_time_minutes ?? 60),
+      actual_time_minutes: Number(res.actual_time_minutes ?? taskData.actual_time_minutes ?? 0)
     };
   },
 
@@ -587,6 +531,8 @@ const API = {
     const payload = {
       materias_id: matId,
       titulo_: taskData.title !== undefined ? taskData.title.trim() : existing.title,
+      estimated_time_minutes: taskData.estimated_time_minutes ?? existing.estimated_time_minutes ?? 60,
+      actual_time_minutes: taskData.actual_time_minutes ?? existing.actual_time_minutes ?? 0,
       descricao: taskData.description !== undefined ? (taskData.description || '').trim() : existing.description,
       prazo: prazoMs,
       status: xanoStatus
@@ -610,8 +556,8 @@ const API = {
       due_date: res.prazo ? new Date(res.prazo).toISOString() : null,
       status: statusUi,
       xano_status: res.status,
-      estimated_time_minutes: 60,
-      actual_time_minutes: statusUi === 'completed' ? 60 : 0
+      estimated_time_minutes: Number(res.estimated_time_minutes ?? payload.estimated_time_minutes ?? 60),
+      actual_time_minutes: Number(res.actual_time_minutes ?? payload.actual_time_minutes ?? 0)
     };
   },
 
@@ -625,45 +571,26 @@ const API = {
   },
 
   addStudyTime(taskId, minutes, newStatus = null) {
-    return this.request(`/academic_tasks/${taskId}/study-time`, {
+    return this.request(`/academic_tasks/by-xano/${taskId}/study-time`, {
       method: 'POST',
       body: JSON.stringify({
         additional_minutes: minutes,
         new_status: newStatus
       })
-    }).catch(err => {
-      console.warn('Registro de tempo local:', err);
     });
   },
 
   // ==========================================
   // Analytics & Reports
   // ==========================================
-  getProgressAnalytics() {
-    return this.request('/analytics/progress').catch(() => ({
-      overall_weighted_progress: 0,
-      overall_simple_progress: 0,
-      total_time_spent_hours: 0,
-      total_tasks_completed: 0,
-      total_tasks: 0,
-      study_velocity_tasks_per_week: 0,
-      projected_completion_date: 'N/A'
-    }));
-  },
+  getProgressAnalytics() { return this.request('/analytics/progress'); },
+  getTimeDistribution() { return this.request('/analytics/time-spent'); },
+  getAIInsights() { return this.request('/ai/insights'); },
 
-  getTimeDistribution() {
-    return this.request('/analytics/time-spent').catch(() => []);
-  },
-
-  getAIInsights() {
-    return this.request('/ai/insights').catch(() => ({
-      summary: 'Análise indisponível no momento.',
-      recommendations: []
-    }));
-  },
+  askAI(question) { return this.request('/ai/ask', {method:'POST',body:JSON.stringify({question})}); },
 
   async downloadWeeklyReport() {
-    const blob = await this.request('/reports/weekly-pdf');
+    const blob = await this.request('/reports/generate', {method:'POST'});
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -674,40 +601,9 @@ const API = {
     window.URL.revokeObjectURL(url);
   },
 
-  search(query, status = null) {
-    const params = new URLSearchParams({ q: query });
+  search(query = '', status = null, overdue = false) {
+    const params = new URLSearchParams({ q: query, overdue: String(overdue) });
     if (status) params.append('status', status);
     return this.request(`/search?${params.toString()}`);
-  },
-
-  // Google Classroom endpoints (preservados caso existam)
-  classroomStatus() {
-    return this.request('/classroom/status').catch(() => ({ connected: false }));
-  },
-
-  classroomConnect() {
-    return this.request('/classroom/connect', { method: 'POST' });
-  },
-
-  classroomSync(refresh = true) {
-    return this.request('/classroom/sync', {
-      method: 'POST',
-      body: JSON.stringify({ refresh })
-    });
-  },
-
-  classroomCourses() {
-    return this.request('/classroom/courses');
-  },
-
-  classroomTasks(params = {}) {
-    const query = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') query.set(k, v); });
-    const qs = query.toString();
-    return this.request(`/classroom/tasks${qs ? `?${qs}` : ''}`);
-  },
-
-  classroomDisconnect() {
-    return this.request('/classroom/connection', { method: 'DELETE' });
   }
 };

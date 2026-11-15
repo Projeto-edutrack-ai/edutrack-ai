@@ -31,6 +31,10 @@ erDiagram
         datetime start_date
         datetime end_date
         datetime created_at
+        string source "Origem: local ou google_classroom"
+        string classroom_course_id "ID do curso no Google Classroom"
+        string classroom_link "Link direto no Classroom"
+        datetime classroom_synced_at "Data/hora da sincronização"
     }
 
     academic_tasks {
@@ -40,11 +44,17 @@ erDiagram
         string title
         string description
         datetime due_date
-        string status
+        string status "pending, in_progress, completed"
         float estimated_time_minutes
         float actual_time_minutes
         datetime completed_at
         datetime created_at
+        string source "Origem: local ou google_classroom"
+        string classroom_coursework_id "ID da atividade no Classroom"
+        string classroom_link "Link direto da atividade"
+        float max_points "Pontuação máxima da atividade"
+        string classroom_submission_state "Estado da submissão no Classroom"
+        datetime classroom_synced_at "Data/hora da sincronização"
     }
 ```
 
@@ -76,6 +86,10 @@ erDiagram
 | `start_date` | DateTime | Sim | | Data de início do período letivo |
 | `end_date` | DateTime | Sim | | Data de término do período letivo |
 | `created_at` | DateTime | Não | | Data de criação |
+| `source` | String | Não | | Origem dos dados (`local` ou `google_classroom`) |
+| `classroom_course_id` | String | Sim | | ID do curso no Google Classroom (se integrado via Xano) |
+| `classroom_link` | String | Sim | | URL direta para o curso no Google Classroom |
+| `classroom_synced_at` | DateTime | Sim | | Carimbo de data/hora da última sincronização |
 
 ### Tabela: `academic_tasks`
 | Campo | Tipo | Nulo? | Chave | Descrição |
@@ -91,3 +105,9 @@ erDiagram
 | `actual_time_minutes` | Float | Não | | Tempo real acumulado no cronômetro |
 | `completed_at` | DateTime | Sim | | Data e hora de conclusão |
 | `created_at` | DateTime | Não | | Data de criação |
+| `source` | String | Não | | Origem dos dados (`local` ou `google_classroom`) |
+| `classroom_coursework_id` | String | Sim | | ID da atividade no Google Classroom |
+| `classroom_link` | String | Sim | | URL direta para a atividade no Google Classroom |
+| `max_points` | Float | Sim | | Pontuação máxima da atividade |
+| `classroom_submission_state` | String | Sim | | Estado da submissão (`NEW`, `CREATED`, `TURNED_IN`, `RETURNED`) |
+| `classroom_synced_at` | DateTime | Sim | | Carimbo de data/hora da última sincronização |

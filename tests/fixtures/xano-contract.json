@@ -1,0 +1,35 @@
+{
+  "source": "OpenAPI 3.0.0 fornecido pela usuária em 10/11/2026",
+  "server": "https://x8ki-letl-twmt.n7.xano.io/api:d_CNfVCs",
+  "authentication_documented": "not required",
+  "fields": {
+    "alunos": {
+      "nome": "string",
+      "email": "string",
+      "curso": "string",
+      "semestre": "integer"
+    },
+    "materias": {
+      "alunos_id": "integer",
+      "nome": "string",
+      "professor": "string",
+      "descricao": "string",
+      "carga_horaria": "integer"
+    },
+    "tarefas": {
+      "materias_id": "integer",
+      "titulo_": "string",
+      "descricao": "string",
+      "prazo": "number",
+      "status": "string"
+    }
+  },
+  "status_enum": [
+    "pendente",
+    "em_andamento ",
+    "concluida"
+  ],
+  "list_response": "array",
+  "delete_response": {},
+  "timestamp_unit": "milliseconds (adapter convention, verify real samples)"
+}

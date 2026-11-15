@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Index
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -10,6 +10,9 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    xano_aluno_id = Column(Integer, nullable=True)
+    xano_binding_base = Column(String, nullable=True)
+    __table_args__ = (Index("uq_users_xano_aluno", "xano_aluno_id", unique=True),)
     
     # Novos campos de perfil acadêmico do estudante
     avatar_url = Column(Text, nullable=True)  # URL ou Data URI em Base64

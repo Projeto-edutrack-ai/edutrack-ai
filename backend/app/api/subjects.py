@@ -85,7 +85,7 @@ def get_subject(
     if not subject:
         raise HTTPException(status_code=404, detail="Disciplina não encontrada.")
     
-    tasks = db.query(AcademicTask).filter(AcademicTask.subject_id == subject_id).all()
+    tasks = db.query(AcademicTask).filter(AcademicTask.subject_id == subject_id, AcademicTask.user_id == current_user.id).all()
     total = len(tasks)
     completed = sum(1 for t in tasks if t.status == "completed")
     time_spent = sum(t.actual_time_minutes for t in tasks)
@@ -98,6 +98,7 @@ def get_subject(
     resp.total_time_spent_minutes = round(time_spent, 1)
     return resp
 
+@router.patch("/{subject_id}", response_model=SubjectResponse)
 @router.put("/{subject_id}", response_model=SubjectResponse)
 def update_subject(
     subject_id: int,
