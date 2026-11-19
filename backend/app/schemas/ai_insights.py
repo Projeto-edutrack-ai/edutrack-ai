@@ -16,3 +16,10 @@ class AIInsightsResponse(BaseModel):
     recommendations: List[InsightRecommendation]
     critical_alerts: List[str]
     weekly_focus: List[str]
+
+class AIAskRequest(BaseModel):
+    question: str
+
+class AIAskResponse(BaseModel):
+    answer: str
+    source: str

@@ -1,3 +1,4 @@
+from app.services.progress_calculation import calculate_percentage
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
@@ -19,7 +20,7 @@ class ProgressEngine:
         in_progress_tasks = sum(1 for t in subject_tasks if t.status == "in_progress")
         pending_tasks = sum(1 for t in subject_tasks if t.status == "pending")
 
-        progress_percentage = (completed_tasks / total_tasks * 100.0) if total_tasks > 0 else 0.0
+        progress_percentage = calculate_percentage(subject_tasks)
 
         total_estimated = sum(t.estimated_time_minutes for t in subject_tasks)
         total_actual = sum(t.actual_time_minutes for t in subject_tasks)
@@ -88,7 +89,7 @@ class ProgressEngine:
             if total_workload_hours > 0:
                 weighted_progress_sum += (metric.progress_percentage * subject.workload_hours)
 
-        overall_simple_progress = (completed_tasks / total_tasks * 100.0) if total_tasks > 0 else 0.0
+        overall_simple_progress = calculate_percentage(tasks)
         overall_weighted_progress = (weighted_progress_sum / total_workload_hours) if total_workload_hours > 0 else 0.0
 
         # Cálculo de velocidade de conclusão

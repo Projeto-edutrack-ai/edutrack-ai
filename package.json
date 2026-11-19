@@ -1,0 +1,9 @@
+{
+  "name": "edutrack1-tooling",
+  "private": true,
+  "scripts": {
+    "spec:validate": "openspec validate --all --strict --no-interactive",
+    "test:frontend": "node --test tests/frontend-client.test.cjs tests/frontend-initialization.test.cjs"
+  },
+  "devDependencies": {"@fission-ai/openspec":"1.17.0"}
+}

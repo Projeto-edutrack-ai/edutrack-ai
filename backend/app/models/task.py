@@ -24,6 +24,8 @@ class AcademicTask(Base):
 
     # Origem Google Classroom (via Xano). Registros locais: source="local" e IDs nulos.
     # actual_time_minutes, estimated_time_minutes e status (manual) continuam locais.
+    # ID do registro espelhado do Xano (materias/tarefas); nulo para registros locais.
+    xano_id = Column(Integer, nullable=True, index=True)
     source = Column(String, nullable=False, default="local", server_default="local")
     classroom_coursework_id = Column(String, nullable=True)
     classroom_link = Column(String, nullable=True)

@@ -1,4 +1,5 @@
 import io
+from xml.sax.saxutils import escape
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from reportlab.lib.pagesizes import letter
@@ -83,7 +84,7 @@ class PDFReportGenerator:
         # 1. Cabeçalho
         story.append(Paragraph("EduTrack AI — Relatório Semanal de Desempenho", title_style))
         now_str = datetime.now(timezone.utc).strftime("%d/%m/%Y às %H:%M UTC")
-        story.append(Paragraph(f"<b>Estudante:</b> {user.name} ({user.email}) &nbsp;|&nbsp; <b>Data de Emissão:</b> {now_str}", subtitle_style))
+        story.append(Paragraph(f"<b>Estudante:</b> {escape(str(user.name))} ({escape(str(user.email))}) &nbsp;|&nbsp; <b>Data de Emissão:</b> {now_str}", subtitle_style))
         story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#cbd5e1"), spaceAfter=15))
 
         # Obter Dados
@@ -146,7 +147,7 @@ class PDFReportGenerator:
             dev_str = f"<font color='{dev_color}'><b>{s.time_deviation_percentage:+.0f}%</b></font>" if s.total_estimated_minutes > 0 else "0%"
             
             table_rows.append([
-                Paragraph(f"<b>{s.subject_name}</b>", body_style),
+                Paragraph(f"<b>{escape(str(s.subject_name))}</b>", body_style),
                 Paragraph(f"{s.workload_hours:.0f}h", body_style),
                 Paragraph(f"{s.completed_tasks}/{s.total_tasks}", body_style),
                 Paragraph(f"<b>{s.progress_percentage:.0f}%</b>", body_style),
@@ -158,7 +159,7 @@ class PDFReportGenerator:
         if len(table_rows) == 1:
             table_rows.append([Paragraph("Nenhuma disciplina cadastrada ainda.", body_style)] * 7)
 
-        subj_table = Table(table_rows, colWidths=[150, 45, 55, 65, 55, 55, 65])
+        subj_table = Table(table_rows, colWidths=[150, 45, 55, 65, 55, 55, 55], repeatRows=1)
         subj_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#eff6ff")),
             ('BOX', (0, 0), (-1, -1), 1, colors.HexColor("#cbd5e1")),
@@ -173,35 +174,38 @@ class PDFReportGenerator:
         story.append(Spacer(1, 15))
 
         # 4. Diagnóstico e Recomendações de IA
-        story.append(Paragraph(f"3. Insights e Recomendações ({insights.generated_by})", section_heading))
-        story.append(Paragraph(f"<i>{insights.summary}</i>", body_style))
+        story.append(Paragraph(f"3. Insights e Recomendações ({escape(str(insights.generated_by))})", section_heading))
+        story.append(Paragraph(f"<i>{escape(str(insights.summary))}</i>", body_style))
         story.append(Spacer(1, 8))
 
         if insights.critical_alerts:
             story.append(Paragraph("<b>Alertas Críticos:</b>", ParagraphStyle('AlertTitle', parent=body_style, textColor=colors.HexColor("#b91c1c"), fontName="Helvetica-Bold")))
             for alert in insights.critical_alerts:
-                story.append(Paragraph(f"• <font color='#b91c1c'>{alert}</font>", body_style))
+                story.append(Paragraph(f"• <font color='#b91c1c'>{escape(str(alert))}</font>", body_style))
             story.append(Spacer(1, 6))
 
         if insights.recommendations:
             story.append(Paragraph("<b>Recomendações Práticas:</b>", ParagraphStyle('RecTitle', parent=body_style, fontName="Helvetica-Bold")))
             for rec in insights.recommendations[:4]:
-                story.append(Paragraph(f"• <b>{rec.title}:</b> {rec.message}", body_style))
+                story.append(Paragraph(f"• <b>{escape(str(rec.title))}:</b> {escape(str(rec.message))}", body_style))
                 if rec.action_suggested:
-                    story.append(Paragraph(f"&nbsp;&nbsp;<i>Sugestão: {rec.action_suggested}</i>", ParagraphStyle('Sug', parent=body_style, textColor=colors.HexColor("#475569"))))
+                    story.append(Paragraph(f"&nbsp;&nbsp;<i>Sugestão: {escape(str(rec.action_suggested))}</i>", ParagraphStyle('Sug', parent=body_style, textColor=colors.HexColor("#475569"))))
                 story.append(Spacer(1, 4))
 
         if insights.weekly_focus:
             story.append(Spacer(1, 4))
             story.append(Paragraph("<b>Foco Recomendado para a Próxima Semana:</b>", ParagraphStyle('FocTitle', parent=body_style, fontName="Helvetica-Bold")))
             for f in insights.weekly_focus:
-                story.append(Paragraph(f"• {f}", body_style))
+                story.append(Paragraph(f"• {escape(str(f))}", body_style))
 
-        # Rodapé com nota OpenSpec
-        story.append(Spacer(1, 20))
-        story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor("#e2e8f0"), spaceAfter=8))
-        story.append(Paragraph("EduTrack AI — Desenvolvido com metodologia Spec-Driven Development (OpenSpec) | Python + FastAPI + Xano Engine", ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.HexColor("#94a3b8"), alignment=1)))
+        # A page footer avoids creating a blank extra page with only the footer.
+        def page_footer(canvas, document):
+            canvas.saveState()
+            canvas.setFont("Helvetica", 7)
+            canvas.setFillColor(colors.HexColor("#64748b"))
+            canvas.drawCentredString(letter[0] / 2, 20, f"EduTrack AI — Relatório acadêmico | Página {document.page}")
+            canvas.restoreState()
 
-        doc.build(story)
+        doc.build(story, onFirstPage=page_footer, onLaterPages=page_footer)
         buffer.seek(0)
         return buffer

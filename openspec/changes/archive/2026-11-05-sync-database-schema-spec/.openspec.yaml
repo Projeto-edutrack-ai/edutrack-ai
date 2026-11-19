@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-05
+goal: Sincronizar especificacao de banco e documentacao de entrega
+skip_specs: true

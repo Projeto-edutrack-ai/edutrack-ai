@@ -12,19 +12,46 @@ const Subjects = {
   },
 
   async loadSubjects(search = '') {
+    // Coalesce refreshes for the same filter; ignore responses superseded by newer filters.
+    this.pendingLoads ||= new Map();
+    const revision = this.loadRevision = (this.loadRevision || 0) + 1;
+    const existing = this.pendingLoads.get(search);
+    if (existing) { existing.revision = revision; return existing.work; }
+    const entry = {revision};
+    const work = entry.work = this.fetchSubjects(search, entry);
+    this.pendingLoads.set(search, entry);
+    try { return await work; }
+    finally { this.pendingLoads.delete(search); }
+  },
+
+  async fetchSubjects(search, entry) {
     const listContainer = document.getElementById('subjects-grid');
     if (!listContainer) return;
 
     try {
       const subjects = await API.getSubjects(search);
+      if (entry.revision !== this.loadRevision) return;
+      listContainer.querySelector?.('[data-refresh-warning]')?.remove();
       this.renderSubjectCards(subjects);
       this.updateSubjectSelects(subjects);
     } catch (err) {
+      if (entry.revision !== this.loadRevision) return;
       console.error('Erro ao carregar matérias do Xano:', err);
+      if (listContainer.querySelector?.('.subject-card')) {
+        let warning = listContainer.querySelector('[data-refresh-warning]');
+        if (!warning) {
+          warning = document.createElement('p');
+          warning.setAttribute('data-refresh-warning', '');
+          warning.className = 'col-span-full text-xs text-amber-600';
+          listContainer.prepend(warning);
+        }
+        warning.textContent = 'Não foi possível atualizar. Mostrando a última lista carregada. ' + err.message;
+        return;
+      }
       listContainer.innerHTML = `
         <div class="col-span-full text-center py-12 pro-card border-dashed">
           <p class="text-xs text-rose-500 font-bold mb-2">Erro ao carregar matérias do Xano.</p>
-          <p class="text-xs text-slate-400 mb-4">${err.message}</p>
+          <p class="text-xs text-slate-400 mb-4">${String(err.message).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</p>
           <button onclick="Subjects.loadSubjects()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold btn-press">
             Tentar Novamente
           </button>

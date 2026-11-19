@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.subject import Subject
 from app.models.task import AcademicTask
-from app.schemas.ai_insights import AIInsightsResponse, InsightRecommendation
+from app.schemas.ai_insights import AIInsightsResponse, InsightRecommendation, AIAskResponse
 from app.services.progress_engine import ProgressEngine
 
 class AIService:
@@ -163,7 +163,7 @@ class AIService:
             "critical_alerts e weekly_focus, em português brasileiro."
         )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent"
         payload = {
             "contents": [{
                 "parts": [{"text": f"{system_instruction}\n\nDados do Aluno:\n{json.dumps(prompt_data, ensure_ascii=False)}"}]
@@ -176,12 +176,74 @@ class AIService:
         req = urllib.request.Request(
             url, 
             data=json.dumps(payload).encode('utf-8'),
-            headers={'Content-Type': 'application/json'}
+            headers={'Content-Type': 'application/json', 'x-goog-api-key': settings.GEMINI_API_KEY}
         )
         
         with urllib.request.urlopen(req, timeout=10) as response:
             resp_body = json.loads(response.read().decode('utf-8'))
             text_content = resp_body['candidates'][0]['content']['parts'][0]['text']
             data = json.loads(text_content)
-            data["generated_by"] = "Gemini 1.5 Flash AI Engine"
+            data["generated_by"] = f"Google {settings.GEMINI_MODEL}"
             return AIInsightsResponse(**data)
+
+    @classmethod
+    def ask_assistant(cls, db: Session, user_id: int, question: str) -> AIAskResponse:
+        """Responde interativamente ao estudante combinando contexto acadêmico com Gemini ou motor contextual local."""
+        metrics = ProgressEngine.calculate_overall_metrics(db, user_id)
+        subjects = db.query(Subject).filter(Subject.user_id == user_id).all()
+        tasks = db.query(AcademicTask).filter(AcademicTask.user_id == user_id).all()
+
+        sub_names = [s.name for s in subjects]
+        pending_tasks = [t.title for t in tasks if t.status != "completed"]
+        completed_tasks = [t.title for t in tasks if t.status == "completed"]
+
+        # Se houver chave Gemini, consultar Gemini
+        if settings.GEMINI_API_KEY:
+            try:
+                import urllib.request
+                prompt = (
+                    f"Você é o Mentor Educacional de IA do EduTrack AI. Responda de forma motivadora, direta e prática à dúvida do aluno.\n"
+                    f"Contexto do Aluno: {len(subjects)} matérias ({', '.join(sub_names)}), progresso ponderado: {metrics.overall_weighted_progress:.1f}%, "
+                    f"tarefas pendentes: {len(pending_tasks)}, tarefas concluídas: {len(completed_tasks)}, "
+                    f"horas totais dedicadas: {metrics.total_study_time_hours:.1f}h.\n\n"
+                    f"Pergunta do Estudante: {question}"
+                )
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent"
+                payload = {"contents": [{"parts": [{"text": prompt}]}]}
+                req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json', 'x-goog-api-key': settings.GEMINI_API_KEY})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    data = json.loads(resp.read().decode('utf-8'))
+                    ans = data['candidates'][0]['content']['parts'][0]['text']
+                    return AIAskResponse(answer=ans, source=f"Google {settings.GEMINI_MODEL}")
+            except Exception as e:
+                print(f"[AIService.ask_assistant] Fallback local: {e}")
+
+        # Fallback inteligente contextual local
+        q_lower = question.lower()
+        if "priorizar" in q_lower or "hoje" in q_lower or "foco" in q_lower:
+            next_task = next((t.title for t in tasks if t.status != "completed"), "nenhuma tarefa pendente")
+            ans = (
+                f"Com base na sua matriz de prazos e no progresso atual de {metrics.overall_weighted_progress:.1f}%, "
+                f"sua prioridade imediata recomendada é focar em: '{next_task}'. "
+                f"Sugerimos aplicar a técnica Pomodoro de 25 minutos no cronômetro da plataforma para iniciar sem procrastinação."
+            )
+        elif "desvio" in q_lower or "tempo" in q_lower or "atraso" in q_lower:
+            ans = (
+                f"Seu total de estudo acumulado é de {metrics.total_study_time_hours:.1f} horas. "
+                "Para matérias onde você estiver gastando mais de 25% de tempo além do estimado, "
+                "a recomendação da IA é quebrar a atividade em micro-tarefas de até 45 minutos e revisar a teoria antes da implementação prática."
+            )
+        elif "cronograma" in q_lower or "semana" in q_lower or "organizar" in q_lower:
+            ans = (
+                f"Você possui {len(pending_tasks)} tarefas em aberto distribuídas em {len(subjects)} disciplinas. "
+                "Recomendamos reservar os primeiros 60 minutos do dia para as disciplinas com maior carga horária e "
+                "alternar com tarefas mais leves no período da tarde para manter a velocidade de estudo constante."
+            )
+        else:
+            ans = (
+                f"Olá! Como seu tutor educacional de IA no EduTrack, analisei seu histórico: você já completou {len(completed_tasks)} de {len(tasks)} tarefas "
+                f"com índice ponderado de {metrics.overall_weighted_progress:.1f}%. "
+                f"Para sua pergunta sobre '{question}', a recomendação pedagógica é manter blocos diários de foco com pausas estruturadas, mantendo o ritmo sem sobrecarga."
+            )
+
+        return AIAskResponse(answer=ans, source="EduTrack AI Mentor Engine")

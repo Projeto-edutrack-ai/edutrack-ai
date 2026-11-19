@@ -19,6 +19,8 @@ class Subject(Base):
 
     # Origem Google Classroom (via Xano). Registros locais: source="local" e IDs nulos.
     # workload_hours, professor, start_date e end_date continuam locais.
+    # ID do registro espelhado do Xano (materias/tarefas); nulo para registros locais.
+    xano_id = Column(Integer, nullable=True, index=True)
     source = Column(String, nullable=False, default="local", server_default="local")
     classroom_course_id = Column(String, nullable=True)
     classroom_link = Column(String, nullable=True)

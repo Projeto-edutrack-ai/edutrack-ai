@@ -8,7 +8,6 @@ const Auth = {
 
   init() {
     this.bindEvents();
-    this.bindProfileEvents();
     this.checkAuth();
   },
 
@@ -97,6 +96,9 @@ const Auth = {
           API.setCurrentUser(data.user);
           this.checkAuth();
           Toast.show(`Bem-vindo, ${data.user.name}!`, 'success');
+          if (data.xano_sync && data.xano_sync.status === 'failed') {
+            Toast.show(`Aviso: sincronização com o Xano falhou: ${data.xano_sync.detail}`, 'error');
+          }
           window.dispatchEvent(new CustomEvent('auth-success'));
         } catch (err) {
           errorEl.textContent = err.message;
@@ -120,7 +122,12 @@ const Auth = {
           API.setToken(data.access_token);
           API.setCurrentUser(data.user);
           this.checkAuth();
-          Toast.show(`Conta criada com sucesso! Bem-vindo, ${data.user.name}!`, 'success');
+          const sync = data.xano_sync || {};
+          if (sync.status === 'synced') {
+            Toast.show(`Conta criada e sincronizada com o Xano! Bem-vindo, ${data.user.name}!`, 'success');
+          } else {
+            Toast.show(`Conta criada, mas NÃO foi sincronizada com o Xano: ${sync.detail || 'sem detalhe'}`, 'error');
+          }
           window.dispatchEvent(new CustomEvent('auth-success'));
         } catch (err) {
           errorEl.textContent = err.message;
@@ -155,30 +162,96 @@ const Auth = {
       });
     }
 
-    // Recuperação de senha
+    // Recuperação de senha: (1) pede o link por e-mail; (2) abre o link e define a nova senha.
     const forgotBtn = document.getElementById('btn-forgot-password');
-    if (forgotBtn) {
-      forgotBtn.addEventListener('click', async () => {
-        const email = prompt('Digite seu email cadastrado para recuperação:');
-        if (email) {
-          try {
-            const resp = await API.forgotPassword(email);
-            Toast.show(resp.message || 'Instruções enviadas para seu email!', 'success');
-          } catch (e) {
-            Toast.show('Erro: ' + e.message, 'error');
+    const forgotModal = document.getElementById('forgot-password-modal');
+    const closeForgotModalBtn = document.getElementById('btn-close-forgot-modal');
+    const formForgotRequest = document.getElementById('form-forgot-request');
+    const formResetPassword = document.getElementById('form-reset-password');
+    const resetEmailInput = document.getElementById('reset-email');
+    const resetPasswordInput = document.getElementById('reset-new-password');
+    const forgotErrorEl = document.getElementById('forgot-modal-error');
+    const forgotSuccessEl = document.getElementById('forgot-modal-success');
+    const forgotTitleEl = document.getElementById('forgot-modal-title');
+
+    const showForgotStep = (step) => {
+      forgotErrorEl.classList.add('hidden');
+      forgotSuccessEl.classList.add('hidden');
+      formForgotRequest.classList.toggle('hidden', step !== 'request');
+      formResetPassword.classList.toggle('hidden', step !== 'reset');
+      forgotTitleEl.textContent = step === 'reset' ? 'Criar Nova Senha' : 'Recuperar Senha';
+      forgotModal.classList.remove('hidden');
+    };
+
+    if (forgotBtn && forgotModal) {
+      forgotBtn.addEventListener('click', () => {
+        const loginEmail = document.getElementById('login-email')?.value || '';
+        if (loginEmail) resetEmailInput.value = loginEmail;
+        showForgotStep('request');
+      });
+    }
+
+    if (closeForgotModalBtn && forgotModal) {
+      closeForgotModalBtn.addEventListener('click', () => forgotModal.classList.add('hidden'));
+    }
+
+    if (formForgotRequest) {
+      formForgotRequest.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('btn-submit-forgot');
+        try {
+          forgotErrorEl.classList.add('hidden');
+          forgotSuccessEl.classList.add('hidden');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Enviando...';
+          const res = await API.forgotPassword(resetEmailInput.value.trim());
+          let msg = res.message;
+          if (res.email_backend === 'console') {
+            msg += ' (Modo desenvolvimento: o e-mail não é entregue; o link foi gravado na pasta outbox/ e no log do servidor.)';
           }
+          forgotSuccessEl.textContent = msg;
+          forgotSuccessEl.classList.remove('hidden');
+        } catch (err) {
+          forgotErrorEl.textContent = err.message;
+          forgotErrorEl.classList.remove('hidden');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enviar link de recuperação';
         }
       });
     }
 
-    window.addEventListener('auth-changed', () => this.checkAuth());
-  },
+    if (formResetPassword) {
+      formResetPassword.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('btn-submit-reset');
+        const token = new URLSearchParams(window.location.search).get('reset_token');
+        try {
+          forgotErrorEl.classList.add('hidden');
+          forgotSuccessEl.classList.add('hidden');
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Atualizando...';
+          const res = await API.resetPassword(token || '', resetPasswordInput.value);
+          forgotSuccessEl.textContent = res.message || 'Senha atualizada com sucesso!';
+          forgotSuccessEl.classList.remove('hidden');
+          Toast.show('Senha atualizada! Entre com a nova senha.', 'success');
+          resetPasswordInput.value = '';
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setTimeout(() => forgotModal.classList.add('hidden'), 2000);
+        } catch (err) {
+          forgotErrorEl.textContent = err.message;
+          forgotErrorEl.classList.remove('hidden');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Atualizar Minha Senha';
+        }
+      });
+    }
 
-  bindProfileEvents() {
-    // Clique no Card do Aluno para abrir edição de perfil
-    const userCard = document.getElementById('sidebar-user-card');
-    if (userCard) {
-      userCard.addEventListener('click', () => this.openProfileModal());
+    // Link recebido por e-mail (/?reset_token=...): abre direto a tela de nova senha
+    if (forgotModal && new URLSearchParams(window.location.search).get('reset_token')) {
+      API.clearAuth();
+      showForgotStep('reset');
     }
 
     // Botão de fechar modal de perfil

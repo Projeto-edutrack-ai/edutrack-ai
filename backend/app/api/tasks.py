@@ -8,6 +8,7 @@ from app.models.subject import Subject
 from app.models.task import AcademicTask
 from app.schemas.task import AcademicTaskCreate, AcademicTaskUpdate, AcademicTaskResponse, AddStudyTimeRequest
 from app.api.deps import get_current_user
+from app.services.xano_crud import require_mirror
 
 router = APIRouter(prefix="/academic_tasks", tags=["Tarefas Acadêmicas"])
 
@@ -99,6 +100,7 @@ def get_task(
     resp.subject_name = subject.name if subject else None
     return resp
 
+@router.patch("/{task_id}", response_model=AcademicTaskResponse)
 @router.put("/{task_id}", response_model=AcademicTaskResponse)
 def update_task(
     task_id: int,
@@ -115,6 +117,11 @@ def update_task(
         raise HTTPException(status_code=404, detail="Tarefa não encontrada.")
 
     update_data = task_in.model_dump(exclude_unset=True)
+
+    if "subject_id" in update_data:
+        target = db.query(Subject).filter(Subject.id == update_data["subject_id"], Subject.user_id == current_user.id).first()
+        if not target:
+            raise HTTPException(status_code=404, detail="Disciplina vinculada não encontrada.")
 
     # Tratar mudança de status para completed ou reabertura
     if "status" in update_data:
@@ -135,6 +142,33 @@ def update_task(
     resp.subject_name = subject.name if subject else None
     return resp
 
+@router.post("/by-xano/{xano_id}/study-time", response_model=AcademicTaskResponse)
+def record_study_time_by_xano_id(
+    xano_id: int,
+    payload: AddStudyTimeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Igual a study-time, mas identifica a tarefa pelo ID do Xano (o cronômetro do frontend só conhece esse ID)."""
+    from app.services.xano_crud import XanoCrudClient
+    if not XanoCrudClient().is_configured():
+        return record_study_time(xano_id, payload, current_user, db)
+    require_mirror(db, current_user, force=True)
+    task = db.query(AcademicTask).filter(
+        AcademicTask.xano_id == xano_id,
+        AcademicTask.user_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarefa não encontrada.")
+    if payload.new_status:
+        from app.services.xano_crud import XanoCrudClient, XanoCrudError
+        remote_status = {"pending":"pendente", "in_progress":"em_andamento ", "completed":"concluida"}[payload.new_status]
+        try:
+            XanoCrudClient()._request("PATCH", f"/tarefas/{xano_id}", json_body={"status":remote_status})
+        except XanoCrudError:
+            raise HTTPException(status_code=502, detail="Não foi possível atualizar o status remoto; o tempo não foi registrado.") from None
+    return record_study_time(task.id, payload, current_user, db)
+
 @router.post("/{task_id}/study-time", response_model=AcademicTaskResponse)
 def record_study_time(
     task_id: int,
@@ -150,11 +184,16 @@ def record_study_time(
     if not task:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada.")
 
-    task.actual_time_minutes += payload.additional_minutes
+    db.query(AcademicTask).filter(AcademicTask.id == task_id, AcademicTask.user_id == current_user.id).update(
+        {AcademicTask.actual_time_minutes: AcademicTask.actual_time_minutes + payload.additional_minutes},
+        synchronize_session=False)
+
     if payload.new_status:
         task.status = payload.new_status
         if payload.new_status == "completed":
             task.completed_at = datetime.now(timezone.utc)
+        else:
+            task.completed_at = None
 
     db.commit()
     db.refresh(task)

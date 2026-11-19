@@ -29,3 +29,15 @@ Matriz viva de rastreabilidade de tarefas e conformidade com as proposals OpenSp
 - [x] **TASK-018**: Interface Frontend Mobile-First responsiva com dashboard de métricas, cronômetro ativo e temas claro/escuro.
 - [x] **TASK-019**: Suíte de testes automatizados com `pytest` cobrindo segurança, isolamento e matemática de métricas.
 - [x] **TASK-020**: Monografia acadêmica e guia de apresentação para banca da faculdade.
+
+## Histórico — integração Classroom removida em 10/11/2026
+
+> Os itens abaixo registram trabalho anterior, não recursos atuais. Código de integração removido; registros e colunas legadas preservados. Consulte a change remove-google-classroom.
+
+### Fase 5 anterior
+- [x] **TASK-021**: Especificação canônica do contrato de sincronização (`openspec/specs/xano-classroom-contract.md`) e modelos XanoScript (`openspec/xanoscript/xano-classroom`).
+- [x] **TASK-022**: Migração aditiva de schema para suporte a sincronização externa sem perda de dados (`backend/app/core/migrations.py`).
+- [x] **TASK-023**: Serviços de mapeamento e sincronização resiliente (`classroom_mapper.py`, `classroom_sync.py`, `xano_client.py`).
+- [x] **TASK-024**: Endpoints protegidos da API do Google Classroom (`/api/classroom/*`).
+- [x] **TASK-025**: Expansão da suíte de testes com cobertura completa de integração e isolamento (84 testes automatizados aprovados).
+- [x] **TASK-026**: Governança contínua e validação estrita via OpenSpec CLI (`openspec validate --all`).

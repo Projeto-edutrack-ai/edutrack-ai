@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-05
+goal: Suporte a codificacao UTF-8 no console Windows em run_server.py
+skip_specs: true

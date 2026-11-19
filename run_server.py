@@ -4,10 +4,23 @@ import webbrowser
 import uvicorn
 from pathlib import Path
 
+# Garante suporte a UTF-8 no console do Windows (evita UnicodeEncodeError com emojis)
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # Adiciona o diretório backend ao PYTHONPATH
 current_dir = Path(__file__).resolve().parent
 backend_dir = current_dir / "backend"
 sys.path.insert(0, str(backend_dir))
+
+# Carrega o arquivo .env (se existir) antes de iniciar o app: SMTP, Xano, Gemini etc.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(current_dir / ".env")
+except ImportError:
+    pass
 
 def main():
     print("=" * 70)

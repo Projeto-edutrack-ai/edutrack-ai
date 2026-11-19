@@ -1,3 +1,5 @@
+> Documento original da equipe preservado. Para a versão atual e evidências verificadas, consulte README.md, docs/VALIDACAO.md e docs/PENDENCIAS.md. Recursos/contagens anteriores não comprovam o estado publicado atual.
+
 # Documentação Técnica e Acadêmica: EduTrack AI
 
 **Projeto:** EduTrack AI — Assistente Educacional Personalizado  

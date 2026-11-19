@@ -135,6 +135,47 @@
     </div>
   </div>
 
+  <!-- ================= FORGOT / RESET PASSWORD MODAL ================= -->
+  <div id="forgot-password-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="pro-card max-w-md w-full p-8 border border-slate-200/80 dark:border-slate-800/80 relative z-10 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <span>🔒</span> <span id="forgot-modal-title">Recuperar Senha</span>
+        </h3>
+        <button type="button" id="btn-close-forgot-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold p-1">&times;</button>
+      </div>
+
+      <div id="forgot-modal-error" class="hidden mb-4 p-3 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs rounded-xl font-bold border border-rose-500/20"></div>
+      <div id="forgot-modal-success" class="hidden mb-4 p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs rounded-xl font-bold border border-emerald-500/20"></div>
+
+      <!-- Passo 1: pedir o link por e-mail -->
+      <form id="form-forgot-request" class="space-y-4">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Informe seu email cadastrado. Enviaremos um link para você criar uma nova senha.
+        </p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Cadastrado</label>
+          <input id="reset-email" type="email" required placeholder="aluno@edutrack.edu.br" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/80 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs" />
+        </div>
+        <button type="submit" id="btn-submit-forgot" class="w-full py-3 btn-gradient rounded-xl font-bold text-xs shadow-lg btn-press">
+          Enviar link de recuperação
+        </button>
+      </form>
+
+      <!-- Passo 2: nova senha (abre pelo link recebido por e-mail: /?reset_token=...) -->
+      <form id="form-reset-password" class="space-y-4 hidden">
+        <p class="text-xs text-slate-500 dark:text-slate-400">Escolha a nova senha da sua conta.</p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nova Senha</label>
+          <input id="reset-new-password" type="password" required minlength="6" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/80 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs" />
+        </div>
+        <button type="submit" id="btn-submit-reset" class="w-full py-3 btn-gradient rounded-xl font-bold text-xs shadow-lg btn-press">
+          Atualizar Minha Senha
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- ================= MAIN APP CONTAINER ================= -->
   <div id="main-app-container" class="flex-1 flex flex-col md:flex-row min-h-screen relative z-10">
 
@@ -285,6 +326,11 @@
             </svg>
           </span>
           <input id="global-search-input" type="text" placeholder="Buscar tarefas ou disciplinas... (Enter)" class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 shadow-inner" />
+          <label class="flex items-center gap-2 mt-1 text-xs text-slate-600 dark:text-slate-300">
+            <input id="global-search-overdue" type="checkbox" /> Incluir tarefas atrasadas
+          </label>
+          <div id="global-search-results" role="region" aria-label="Resultados da busca" aria-live="polite" hidden
+            class="absolute z-50 mt-2 p-4 w-full max-h-80 overflow-auto rounded-xl shadow-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"></div>
         </div>
 
         <div class="flex items-center gap-2.5">
@@ -537,32 +583,6 @@
           </button>
         </div>
 
-        <!-- Google Classroom (via Xano) -->
-        <div id="classroom-card" class="pro-card p-5 space-y-4">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-              <h3 class="text-sm font-black text-slate-900 dark:text-white">🎓 Google Classroom</h3>
-              <p id="classroom-status-text" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verificando conexão...</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button id="btn-classroom-connect" class="hidden px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press">Conectar Google Classroom</button>
-              <button id="btn-classroom-sync" class="hidden px-4 py-2 btn-gradient text-xs font-bold rounded-xl shadow-md btn-press">Sincronizar agora</button>
-              <button id="btn-classroom-disconnect" class="hidden px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 btn-press">Desconectar</button>
-            </div>
-          </div>
-          <p id="classroom-last-sync" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
-          <div id="classroom-imported" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 class="text-xs font-black text-slate-700 dark:text-slate-200 mb-1">Cursos importados</h4>
-              <ul id="classroom-courses-list"></ul>
-            </div>
-            <div>
-              <h4 class="text-xs font-black text-slate-700 dark:text-slate-200 mb-1">Atividades importadas</h4>
-              <ul id="classroom-tasks-list"></ul>
-            </div>
-          </div>
-        </div>
-
         <!-- Filter / Search Subjects -->
         <div class="max-w-md">
           <input id="search-subjects-input" type="text" placeholder="Filtrar por nome ou professor..." class="w-full px-4 py-2.5 rounded-xl text-xs bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-xs font-medium" />
@@ -652,6 +672,55 @@
           <p id="ai-summary-text" class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
             Carregando diagnóstico inteligente...
           </p>
+        </div>
+
+        <!-- Interactive AI Study Assistant -->
+        <div class="pro-card p-5 border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/50 via-white to-blue-50/40 dark:from-slate-900 dark:via-slate-900/80 dark:to-indigo-950/40 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🤖</span>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Mentor Educacional Interativo de IA</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Faça perguntas sobre sua rotina, dicas de estudo ou planejamento com base nas suas matérias reais.</p>
+              </div>
+            </div>
+            <span id="ai-chat-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+              Online
+            </span>
+          </div>
+
+          <!-- Prompt Suggestions -->
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn-prompt-chip text-[11px] font-medium px-3 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all" data-prompt="Qual matéria ou tarefa devo priorizar hoje?">
+              🎯 O que priorizar hoje?
+            </button>
+            <button type="button" class="btn-prompt-chip text-[11px] font-medium px-3 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all" data-prompt="Como organizar meu cronograma de estudos para a semana?">
+              📅 Planejar minha semana
+            </button>
+            <button type="button" class="btn-prompt-chip text-[11px] font-medium px-3 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all" data-prompt="Dicas práticas para reduzir meu desvio de tempo e não atrasar matérias">
+              ⏱️ Dicas para evitar desvios
+            </button>
+          </div>
+
+          <!-- Question Input Form -->
+          <form id="form-ai-ask" class="flex gap-2">
+            <input id="ai-ask-input" type="text" placeholder="Pergunte ao mentor de IA (ex: 'Como melhorar meu rendimento em Python?')..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs" />
+            <button type="submit" id="btn-send-ai-question" class="px-4 py-2.5 btn-gradient rounded-xl text-xs font-bold text-white shadow-md btn-press flex items-center gap-1.5 flex-shrink-0">
+              <span>Perguntar</span>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </form>
+
+          <!-- AI Response Container -->
+          <div id="ai-response-box" class="hidden mt-4 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-white/80 dark:bg-slate-800/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                <span>✨ Resposta do Mentor:</span>
+              </span>
+              <span id="ai-response-source" class="text-[10px] text-slate-400 font-mono"></span>
+            </div>
+            <p id="ai-response-text" class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium whitespace-pre-line"></p>
+          </div>
         </div>
 
         <!-- Critical Alerts -->
@@ -1039,7 +1108,6 @@
   <script src="/static/js/auth.js"></script>
   <script src="/static/js/dashboard.js"></script>
   <script src="/static/js/subjects.js"></script>
-  <script src="/static/js/classroom.js"></script>
   <script src="/static/js/tasks.js"></script>
   <script src="/static/js/insights.js"></script>
   <script src="/static/js/app.js"></script>

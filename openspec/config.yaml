@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  EduTrack uses Antigravity for HTML/CSS/JavaScript frontend (approved replacement for FlutterFlow), FastAPI/SQLite authentication and Xano alunos/materias/tarefas for academic records.
+  Google Classroom has been removed; do not introduce OAuth or its tables.
+  Backend proxy enforces JWT and ownership; remote endpoint protection must be configured separately.
+  Existing account linking requires verified persistent mapping, not email matching alone.
+  Exact remote fields: titulo_, status with enum pendente / em_andamento-with-trailing-space / concluida; carga_horaria integer.
+  Language: Portuguese
+  Proposal, design and explanatory documentation use Portuguese. New tasks.md files MUST use English. Preserve historical artifact languages.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Before an AI changes any project file, create or update an OpenSpec change for that exact scope. Track implementation tasks and validation results there, including for small fixes and documentation changes.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
